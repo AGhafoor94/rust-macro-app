@@ -1,0 +1,323 @@
+use serde::{Deserialize, Serialize};
+use serde_json::from_str;
+use std::{ fs::{self, DirEntry, File, FileType},  io::{self, Read, Write}, path::Path, process::{ Output }, str, time::Duration };
+// use windows::Win32::UI::Input::KeyboardAndMouse::{*};
+use windows::Win32::{Foundation::*, System::LibraryLoader::*, UI::{Input::{self, KeyboardAndMouse::{VK_LBUTTON, VK_RBUTTON}}, WindowsAndMessaging::*}};
+use windows::core::{ s };
+use windows::Win32::UI::Input::KeyboardAndMouse::{*};
+
+static X_SIZE: i32 = 500;
+static Y_SIZE:i32 = 500;
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Macro {
+    app_name: String,
+    website_open: bool,
+    websites: Vec<Websites>,
+    read_file: bool
+}
+enum KEYS {
+    WINKEY = 0x5B,
+    CAPS = 0x14,
+    NUMLOCK = 0x90,
+    SCROLLLOCK = 0x91
+}
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Websites {
+    website: String,
+    steps: Vec<Steps>
+}
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Steps {
+    name: String,
+    code: u16,
+    held: bool,
+    time: u16
+}
+fn main() -> Result<(), std::io::Error> {
+    let directory_files:Result<Output,std::io::Error> = execute_command("cmd", &["/C", "dir /b /a-d"]);
+    
+    match directory_files {
+        Ok(v) => println!("{:?}", v),
+        _ => println!("Error")
+    };
+    let mut file_name: String = String::new();
+    println!("Enter file name");
+    let _ = io::stdin().read_line(&mut file_name);
+    println!("{:?}",file_name.trim());
+    let mut file:File = File::open(format!(".\\marcos\\{name}.json", name=file_name.trim())).unwrap();
+    let mut buffer:String = String::new();
+    let _ = file.read_to_string(&mut buffer);
+    println!("{:?}",&buffer);
+    let data:Macro = serde_json::from_str(&buffer).expect("Not found");
+    let websites: Vec<Websites> = data.websites;
+    
+    // let open_app: Result<Output, std::io::Error> = execute_command("cmd",&["/C",format!("start {data}", data = & data.app_name).as_str(), "https://github.com/"]);
+    
+    // let virtual_keys_vec:Vec<u16> = vec![0x5B,0x90,0x91,0x14];
+    let mut hold_keys_vector_steps:Vec<Steps> = Vec::new();
+    // let mut hold_keys_vector:Vec<u16> = Vec::new();
+    let mut virtual_keys_vector:Vec<u16> = Vec::new();
+    for website in websites.into_iter() {
+        for step in website.steps.into_iter() {
+            // steps_vec.push(step);
+            // match from_str::<u16>(&step.code) {
+            //     Ok(o) => virtual_keys_vector.push(o),
+            //     _ => println!("ERROR")
+            // };
+            hold_keys_vector_steps.push(step);
+            // if step.held {
+            // }
+            
+            // virtual_keys_vector.push(step.code);
+        }
+    }
+    virtual_keys_vector.iter().for_each(|x| {
+        println!("{:?}", &x);
+    });
+    unsafe {
+        let instance = GetModuleHandleA(None).unwrap();
+        debug_assert!(instance.0 != 0);
+        let window_class = s!("window");
+        let window_class_a = WNDCLASSA {
+            style: CS_OWNDC | CS_VREDRAW | CS_HREDRAW,
+            lpfnWndProc: Some(wnd_proc),
+            hInstance: instance.into(),
+            hCursor: LoadCursorW(None, IDC_ARROW).unwrap(),
+            lpszClassName: window_class,
+            cbClsExtra: 0,
+            cbWndExtra: 0,
+            hIcon: Default::default(),
+            hbrBackground: Default::default(),
+            lpszMenuName: s!("Menu")
+        };
+        let atom:u16 = RegisterClassA(&window_class_a);
+        debug_assert!(atom != 0);
+        println!("Atom: {:?}",atom);
+        let mut message:MSG = MSG::default();
+        let current_window:HWND = GetForegroundWindow();
+        let length:i32 = GetWindowTextLengthA(current_window) + 1;
+        let mut window_text: Vec<u16> = vec![];
+        GetWindowTextW(current_window,&mut window_text);
+        let mut client_rect: RECT = RECT {..Default::default()};
+        let _ = GetClientRect(current_window,&mut client_rect);
+        // let _ = SetWindowPos(current_window,HWND_TOP,0,0,client_rect.right,client_rect.bottom,SWP_SHOWWINDOW);
+        // let windows_position = MapWindowPoints(0, current_window,0 );
+        let mut text:Vec<u16> = vec![0;length as usize];
+        let _ = GetWindowTextW(current_window,&mut text);
+        println!("line 109: {:?}",String::from_utf16_lossy(&text[..length as usize]));
+        // send_input_messages(164, false);
+        // std::thread::sleep(std::time::Duration::from_millis(1000));
+        // send_input_messages(9, false);
+        // std::thread::sleep(std::time::Duration::from_millis(5000));
+        // send_input_messages(164, true);
+        // send_input_messages(9, true);
+        // std::thread::sleep(std::time::Duration::from_millis(2000));
+        let mut holding_keys_to_release:Vec<u16> = Vec::new();
+        for key in hold_keys_vector_steps.iter() {
+            std::thread::sleep(std::time::Duration::from_millis(1000));
+            if key.code == 999 {
+                std::thread::sleep(std::time::Duration::from_secs(key.time.into()));
+            }
+            if key.held {
+                send_input_messages(key.code, false, true);
+                holding_keys_to_release.push(key.code);
+            }else {
+                send_input_messages(key.code, true, false);
+            }
+        }
+        for key in holding_keys_to_release.iter() {
+            send_input_messages(*key, true, false);
+        }
+        let mut keyboard_state_vec:[u8; 256] = [0;256];
+        let _ = GetKeyboardState(&mut keyboard_state_vec);
+        println!("{:?}", keyboard_state_vec);
+        keyboard_state_vec.iter_mut().for_each(|f| {
+            *f = 0
+        });
+        let keyboard_state = GetKeyboardState(&mut keyboard_state_vec);
+        println!("{:?}", keyboard_state_vec);
+        println!("{:?}", keyboard_state);
+        // for item in virtual_keys_vector.iter() {
+            
+        //     send_input_messages(*item, true);
+        //     std::thread::sleep(std::time::Duration::from_millis(2000));
+        // }
+        
+        // send_input_messages(0x90);
+        // GetMessageA(&mut message, None, 0,0);
+        while GetMessageA(&mut message, None, 0, 0).into(){
+            DispatchMessageA(&message);
+        }
+    }
+    Ok(())
+}
+fn send_input_messages(virtual_key_num:u16,release_key:bool, individial_press:bool) {
+    unsafe {
+
+        let get_key_state_int = virtual_key_num as i32;
+        
+        let input_zero: INPUT_0 = INPUT_0 {
+            ki: KEYBDINPUT {
+                wVk: VIRTUAL_KEY(virtual_key_num),
+                wScan: virtual_key_num,
+                dwFlags:KEYBD_EVENT_FLAGS(0x0001),
+                time: 2000,
+                dwExtraInfo: 0x0008 as usize
+            },
+        };
+        let release_zero: INPUT_0 = INPUT_0 {
+            ki: KEYBDINPUT {
+                wVk: VIRTUAL_KEY(virtual_key_num),
+                wScan: virtual_key_num,
+                dwFlags:KEYBD_EVENT_FLAGS(0x0002),
+                time: 2000,
+                dwExtraInfo:0x0008 as usize
+            },
+        };
+        let input_struct:INPUT = INPUT {
+            r#type: INPUT_TYPE(1),
+            Anonymous: input_zero
+        };
+        let input_release_struct:INPUT = INPUT{
+            r#type: INPUT_TYPE(1),
+            Anonymous: release_zero
+        };
+        let struct_size:i32 = core::mem::size_of::<INPUT>() as i32;
+        let key_state:i16 = GetKeyState(get_key_state_int);
+        if individial_press {
+            let _ = SendInput(&[input_struct],struct_size);
+            println!("{:?}", key_state);
+            if release_key {
+                let _ = SendInput(&[input_release_struct],struct_size);
+            }
+        }else {
+            let _ = SendInput(&[input_release_struct],struct_size);
+        }
+        println!("{:?}", key_state);
+    }
+}
+fn execute_command(exe: &str, args: &[&str]) -> Result<Output, std::io::Error>
+{
+    // let command:Output = Command::new(exe).args(&*args).output().expect("Can't run");
+    std::process::Command::new(exe).args(&*args).output()
+}
+fn copy_all_files_in_directory(source: impl AsRef<Path>, destination: impl AsRef<Path>) -> io::Result<()>
+{
+    fs::create_dir(&destination)?;
+    for entry in fs::read_dir(&source)?
+    {
+        let entry:DirEntry = entry?;
+        let try_get_file_type:FileType = entry.file_type()?;
+        if try_get_file_type.is_dir()
+        {
+            copy_all_files_in_directory(entry.path(), &destination.as_ref().join(entry.file_name()))?;
+        }else {
+            fs::copy(entry.path(), &destination.as_ref().join(entry.file_name()))?;
+        }
+    }
+    Ok(())
+}
+extern "system" fn wnd_proc(window:HWND, message:u32, wparam:WPARAM, lparam:LPARAM) -> LRESULT
+{
+    // println!("Message: {:?}", message);
+    unsafe {
+       //  h_result:HRESULT = CreateGraphicsResources();
+       
+    //    let _ = BlockInput(true);
+        match message {
+            WM_ACTIVATEAPP => {
+                println!("Active app: {:?}", message);
+                LRESULT(0)
+            },
+            WM_CREATE => {
+                println!("Create App: {:?}", message);
+                
+                let _ = CreateWindowExA(Default::default(),s!("STATIC"), s!("Test message"),WS_VISIBLE | WS_CHILD, 20,20, 300, 20, window,HMENU(1),None,None);
+                let _ = CreateWindowExA(Default::default(), s!("BUTTON"), s!("Text inside"), WS_VISIBLE | WS_CHILD| WS_BORDER, 20, 50, 200, 20, window, HMENU(2), None, None);
+                let _ = CreateWindowExA(Default::default(), s!("BUTTON"), s!("Close"), WS_VISIBLE | WS_CHILD| WS_BORDER, 20, 150, 200, 20, window, HMENU(3), None, None);
+                let _ = CreateWindowExA(Default::default(), s!("EDIT"), s!("Hello World"),WS_VISIBLE | WS_CHILD| WS_BORDER, 30, 180, 200, 50, window, None,None, None);
+
+                // let _ = BlockInput(false);
+                LRESULT(0)
+            },
+            WM_COMMAND => {
+                // let code_val = wparam.0 as i32;
+                match wparam.0 as i32 {
+                    1 => {
+                        MessageBoxExA(window, s!("Button Pressed"), s!("BUTTON PRESSED"), MB_OK, Default::default());
+                    },
+                    2 => {
+                        println!("2");
+                    },
+                    3 => {
+                        PostQuitMessage(0);
+                    },
+                    4 => {
+                        let mut text:Vec<u8>= vec![];
+                        let val:i32 = GetWindowTextA(window, &mut text);
+                        println!("199: {:?}", val);
+                    },
+                    _ => {
+                        println!("Error");
+                        let mut buffer: Vec<u16> = vec![0; (100 + 1) as usize];
+                        // let mut text:Vec<u8>= vec![];
+                        let val:i32 = GetWindowTextW(window, &mut buffer);
+                        let window_text = String::from_utf16_lossy(&buffer[..100 as usize]);
+
+                        println!("Active window text: {}", window_text);
+                    }
+                }
+                println!("189: {:?}", wparam);
+
+                // let _ = BlockInput(false);
+                LRESULT(0)
+            },
+            // WM_PAINT => {
+            //     println!("Paint APP: {:?}", message);
+            //     // PAINTSTRUCT { hdc: val, fErase: val, rcPaint: val, fRestore: val, fIncUpdate: val, rgbReserved: val }
+            //     let mut paint_struct:PAINTSTRUCT = PAINTSTRUCT { ..Default::default() };
+            //     let hdc:HDC = BeginPaint(window, &mut paint_struct);
+            //     // let rect:RECT = RECT {left:0, top:0, right:X_SIZE,bottom:Y_SIZE};
+            //     // println!("RECT: {:?}",&rect);
+            //     // let _ = ValidateRect(window, None);
+                
+            //     let mut client_rect: RECT = RECT {..Default::default()};
+            //     let _ = GetClientRect(window,&mut client_rect);
+            //     let mut original_object:HGDIOBJ = HGDIOBJ(0);
+            //     original_object = SelectObject(paint_struct.hdc, GetStockObject(DC_PEN));
+            //     let black_pen:HPEN = CreatePen(PS_SOLID, 3,COLORREF(0x000FFAA1));
+            //     SelectObject(paint_struct.hdc, black_pen);
+            //     let _ = Rectangle(paint_struct.hdc, client_rect.left + 100, client_rect.top + 100, client_rect.right - 100, client_rect.bottom - 100);
+
+            //     let numbers:Vec<u16> = vec![67, 117, 114, 114, 101, 110, 116, 72, 111, 114, 105, 122, 111, 110, 116, 97, 108, 82, 101, 115, 111, 108, 117, 116, 105, 111, 110, 32, 32, 67, 117, 114, 114, 101, 110, 116, 86, 101, 114, 116, 105, 99, 97, 108, 82, 101, 115, 111, 108, 117, 116, 105, 111, 110, 32, 32, 13, 13, 10, 50, 53, 54, 48];
+            //     // let msg: Vec<u8> = b"Peace!".to_vec();#
+            //     let _ = Ellipse(hdc, 0, 100, 400, 400);
+            //     // CreateEllipseGeometry()
+            //     let mut rect: RECT = RECT {left:0, top:0, right:100,bottom:100};
+
+            //     let _ = TextOutW(hdc, 0, 100, &numbers);
+            //     // DrawTextExA(hdc, &mut msg, &mut rect, DT_LEFT | DT_TOP, None);
+            //     FillRect(hdc, &mut rect, CreateSolidBrush(COLORREF(0x00A12345)));
+            //     let delete:BOOL = DeleteObject(black_pen);
+            //     let _ = EndPaint(window, &paint_struct);
+            //     LRESULT(0)
+            // },
+            WM_CLOSE => {
+                println!("Close APP: {:?}", message);
+                PostQuitMessage(0);
+                // let _ = BlockInput(false);
+                LRESULT(0)
+            },
+            WM_DESTROY => {
+                println!("Destoryed: {:?}", message);
+                PostQuitMessage(0);
+                // let _ = BlockInput(false);
+                LRESULT(0)
+            },
+            _ => DefWindowProcA(window, message, wparam, lparam)
+        }
+    }
+}

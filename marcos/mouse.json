@@ -1,0 +1,67 @@
+{
+    "appName": "file explorer",
+    "app": [
+        {
+            "appValue": "app",
+            "websiteOpen": false,
+            "steps": [
+                {
+                    "name":"Mouse move",
+                    "code": 804,
+                    "sentence": "400,400",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait key",
+                    "code": 999,
+                    "sentence": "",
+                    "held": false,
+                    "time": 1,
+                    "loop": 1
+                },
+                {
+                    "name":"Mouse left click",
+                    "code": 801,
+                    "sentence": "",
+                    "held": true,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait key",
+                    "code": 999,
+                    "sentence": "",
+                    "held": false,
+                    "time": 5,
+                    "loop": 1
+                },
+                {
+                    "name":"Mouse move",
+                    "code": 804,
+                    "sentence": "1550,550",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait key",
+                    "code": 999,
+                    "sentence": "",
+                    "held": false,
+                    "time": 5,
+                    "loop": 1
+                },
+                {
+                    "name":"Mouse left click",
+                    "code": 801,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                }
+            ]
+        }
+    ]
+}
