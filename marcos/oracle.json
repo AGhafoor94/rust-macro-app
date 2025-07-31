@@ -1,14 +1,14 @@
 {
-    "appName": "notepad",
+    "appName": "Open SQL Plus",
     "app": [
         {
-            "appValue": "notepad",
+            "appValue": "app",
             "websiteOpen": false,
             "steps": [
                 {
-                    "name":"Sentence",
-                    "code": 998,
-                    "sentence": "This is a test",
+                    "name":"Command",
+                    "code": 987,
+                    "sentence": "cd  && start sqlplus.exe",
                     "held": false,
                     "time": 0,
                     "loop": 1

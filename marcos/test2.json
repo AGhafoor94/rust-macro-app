@@ -1,71 +1,64 @@
 {
-    "appName": "Open SQL Plus",
+    "appName": "Test 2",
+    "description": "Test 2",
     "app": [
         {
-            "appValue": "C:\\Oracle\\instantclient_21_9\\sqlplus",
-            "websiteOpen": false,
+            "appValue": "file:///C:/Users/adnan.ghafoor/Downloads/payroll%20pages/iframe.html",
+            "websiteOpen": true,
             "steps": [
                 {
-                    "name":"Wait key",
+                    "name":"Wait",
                     "code": 999,
-                    "sentence": "",
                     "held": false,
-                    "time": 5,
+                    "sentence": "",
+                    "time": 2   ,
                     "loop": 1
                 },
                 {
-                    "name":"ALT key",
-                    "code": 164,
+                    "name":"Control",
+                    "code": 162,
                     "held": true,
                     "sentence": "",
                     "time": 0,
                     "loop": 1
                 },
                 {
-                    "name":"TAB key",
-                    "code": 9,
+                    "name":"Shift",
+                    "code": 160,
                     "held": true,
                     "sentence": "",
                     "time": 0,
                     "loop": 1
                 },
                 {
-                    "name":"ALT key",
-                    "code": 164,
+                    "name":"j",
+                    "code": 74,
                     "held": false,
                     "sentence": "",
                     "time": 0,
                     "loop": 1
                 },
                 {
-                    "name":"Sentence",
-                    "code": 998,
-                    "sentence": "",
+                    "name":"Wait",
+                    "code": 999,
                     "held": false,
+                    "sentence": "",
+                    "time": 2   ,
+                    "loop": 1
+                },
+                {
+                    "name":"Control",
+                    "code": 162,
+                    "held": false,
+                    "sentence": "",
                     "time": 0,
                     "loop": 1
                 },
                 {
-                    "name":"Enter key",
-                    "code": 13,
-                    "sentence": "",
+                    "name":"Shift",
+                    "code": 160,
                     "held": false,
-                    "time": 0,
-                    "loop": 1
-                },
-                {
-                    "name":"Sentence",
-                    "code": 998,
                     "sentence": "",
-                    "held": false,
-                    "time": 0,
-                    "loop": 1
-                },
-                {
-                    "name":"Enter key",
-                    "code": 13,
-                    "sentence": "",
-                    "held": false,
                     "time": 0,
                     "loop": 1
                 }

@@ -1,0 +1,19 @@
+{
+    "appName": "chrome",
+    "app": [
+        {
+            "appValue": "",
+            "websiteOpen": true,
+            "steps": [
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 1,
+                    "loop": 1
+                }
+            ]
+        }
+    ]
+}

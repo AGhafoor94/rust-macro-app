@@ -2,7 +2,7 @@
     "appName": "chrome",
     "app": [
         {
-            "appValue": "https://google.co.uk",
+            "appValue": "https://salford-nhs.mfcloud.co.uk/TMS/Dashboard/DashboardHome/Index?cs=8510794",
             "websiteOpen": true,
             "steps": [
                 {

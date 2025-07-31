@@ -2,7 +2,7 @@
     "appName": "chrome",
     "app": [
         {
-            "appValue": "https://google.co.uk",
+            "appValue": "",
             "websiteOpen": true,
             "steps": [
                 {

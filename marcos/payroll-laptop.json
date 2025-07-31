@@ -1,0 +1,268 @@
+{
+    "appName": "payroll - Open AW8",
+    "description": "Open payroll website and click onto notifications",
+    "app": [
+        {
+            "appValue": "",
+            "websiteOpen": true,
+            "steps": [
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 2   ,
+                    "loop": 1
+                },
+                {
+                    "name":"F11",
+                    "code": 122,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 1,
+                    "loop": 1
+                },
+                {
+                    "name":"Sentence",
+                    "code": 998,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Tab",
+                    "code": 9,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Sentence",
+                    "code": 997,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Enter key",
+                    "code": 13,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 1,
+                    "loop": 1
+                },
+                {
+                    "name":"Mouse move",
+                    "code": 804,
+                    "sentence": "330,485",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 1,
+                    "loop": 1
+                },
+                {
+                    "name":"Mouse left click",
+                    "code": 801,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 1,
+                    "loop": 1
+                },
+                {
+                    "name":"Mouse move",
+                    "code": 804,
+                    "sentence": "480,345",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Mouse left click",
+                    "code": 801,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 1,
+                    "loop": 1
+                },
+                {
+                    "name":"Mouse move",
+                    "code": 804,
+                    "sentence": "460,705",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Mouse left click",
+                    "code": 801,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"F12 key",
+                    "code": 123,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 2,
+                    "loop": 1
+                },
+                {
+                    "name":"Sentence",
+                    "code": 996,
+                    "sentence": "let table = window.document.querySelectorAll('iframe')[0].contentWindow.document.querySelectorAll('table')[1]",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Enter key",
+                    "code": 13,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Sentence",
+                    "code": 996,
+                    "sentence": "console.log(table)",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Enter key",
+                    "code": 13,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Sentence",
+                    "code": 996,
+                    "sentence": "let table_info = Array.prototype.map.call(table.querySelectorAll('tr'),function(tr){return Array.prototype.map.call(tr.querySelectorAll('td'), function(td){return td.innerHTML;});});",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Enter key",
+                    "code": 13,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 1,
+                    "loop": 1
+                },
+                {
+                    "name":"Sentence",
+                    "code": 996,
+                    "sentence": "table_info = table_info.slice(1)",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Enter key",
+                    "code": 13,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Sentence",
+                    "code": 996,
+                    "sentence": "console.log(table_info)",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Enter key",
+                    "code": 13,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Sentence",
+                    "code": 996,
+                    "sentence": "table_info.forEach(item => {if(item[9] === 'No') {let id = item[11].replaceAll('\"','').replace('<input type=checkbox name=del value=','').replace('>','');table.querySelectorAll(`input[value=\"${id}\"]`)[0].checked = true;}})",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Mouse move",
+                    "code": 804,
+                    "sentence": "510,675",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                }
+            ]
+        }
+    ]
+}

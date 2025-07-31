@@ -1,14 +1,22 @@
 {
-    "appName": "file explorer",
+    "appName": "Move files",
     "app": [
         {
             "appValue": "app",
             "websiteOpen": false,
             "steps": [
                 {
+                    "name":"Wait key",
+                    "code": 999,
+                    "sentence": "",
+                    "held": false,
+                    "time": 1,
+                    "loop": 1
+                },
+                {
                     "name":"Mouse move",
                     "code": 804,
-                    "sentence": "400,400",
+                    "sentence": "1725,1845",
                     "held": false,
                     "time": 0,
                     "loop": 1
@@ -25,7 +33,7 @@
                     "name":"Mouse left click",
                     "code": 801,
                     "sentence": "",
-                    "held": true,
+                    "held": false,
                     "time": 0,
                     "loop": 1
                 },
@@ -34,13 +42,13 @@
                     "code": 999,
                     "sentence": "",
                     "held": false,
-                    "time": 5,
+                    "time": 2,
                     "loop": 1
                 },
                 {
                     "name":"Mouse move",
                     "code": 804,
-                    "sentence": "1550,550",
+                    "sentence": "1755,1685",
                     "held": false,
                     "time": 0,
                     "loop": 1
@@ -50,12 +58,20 @@
                     "code": 999,
                     "sentence": "",
                     "held": false,
-                    "time": 5,
+                    "time": 2,
                     "loop": 1
                 },
                 {
-                    "name":"Mouse left click",
-                    "code": 801,
+                    "name":"Mouse right click",
+                    "code": 802,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Down key",
+                    "code": 40,
                     "sentence": "",
                     "held": false,
                     "time": 0,

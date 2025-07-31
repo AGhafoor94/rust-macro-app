@@ -2,8 +2,8 @@
     "appName": "notepad",
     "app": [
         {
-            "appValue": "notepad",
-            "websiteOpen": true,
+            "appValue": "app",
+            "websiteOpen": false,
             "steps": [
                 {
                     "name":"Wait",
