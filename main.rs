@@ -34,6 +34,7 @@ use windows::Win32::UI::Input::KeyboardAndMouse::*;
 struct Macro {
     app_name: String,
     app: Vec<App>,
+    r#loop: u8
 }
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -121,20 +122,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut hold_keys_vector_steps: Vec<Steps> = Vec::new();
     // let mut hold_keys_vector:Vec<u16> = Vec::new();
     let virtual_keys_vector: Vec<u16> = Vec::new();
-    
+    let mut _program:String = "".to_owned();
+    let mut website:bool = false;
     for app in app.into_iter() {
         if String::eq(&app.app_value, "app") {
             // let _ = execute_command(
             //     "cmd",
             //     &["/C", "start C:/Users/adnan.ghafoor/Downloads/webscraper.exe payroll 1"],
             // );
-            
+            _program = "app".to_owned();
             for step in app.steps.into_iter() {
                 hold_keys_vector_steps.push(step);
             }
         }else {
             if app.website_open {
                 println!("OPENING WEBSITE");
+                _program = app.app_value.to_owned();
+                website = true;
                 // let website_to_open = &app[0].app_value;
                 // let _ = execute_command("cmd", &["/C", "start chrome --new-window -incognito", &app.app_value]);
                 let _ = execute_command(
@@ -148,6 +152,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 std::thread::sleep(std::time::Duration::from_millis(500));
             } else {
                 if !String::eq(&app.app_value, "app") {
+                    _program = app.app_value.to_owned();
                     let file_to_open: String = format!("{}.exe", &app.app_value);
                     println!("Opening {}", file_to_open);
                     let _ = execute_command("cmd", &["/C", "start", &file_to_open]);
@@ -190,112 +195,59 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let _ = SetForegroundWindow(_current_window);
         let _ = SetActiveWindow(_current_window);
         let _ = GetWindowRect(_current_window, &mut focus_rect);
-        // let _ = SetCursorPos(focus_rect.left, focus_rect.top);
-        // println!("Focus Rect: {}, {}", focus_rect.left, focus_rect.top);
         get_mouse_events();
 
-        // let mut holding_keys_to_release: Vec<u16> = Vec::new();
         let _mouse_movements: Vec<Steps> = Vec::new();
-        for (i, key) in hold_keys_vector_steps.iter().enumerate() {
-            println!("{:?}", key.name);
-
-            for _ in 0..key.r#loop {
-                // println!("{}", i);
-                std::thread::sleep(std::time::Duration::from_millis(100));
-                if key.held && key.code < 800 {
-                    // Key hold for keyboard
-                    println!("HOLDING KEY: {}", key.code);
-                    send_input_messages(key.code, false, true)
-                    // holding_keys_to_release.push(key.code)
-                } else if key.code == 987 {
-                    // Command execute
-                    let output: Result<Output, io::Error> = execute_command("cmd", &["/C", &key.sentence]);
-                    match output {
-                        Ok(o) => {
-                            let string_match = str::from_utf8(&o.stdout).expect("Can't").split("\n");
-                            if str::contains(&key.sentence, ".jnlp")
-                                || str::contains(&key.sentence, ".exe")
-                            {
-                                for i in string_match {
-                                    println!("{:?}", &i);
-                                }
-                            }
-                        }
-                        _ => println!("ERROR"),
+        for i in 0..data.r#loop as u8 {
+            if i > 0 {
+                if website {
+                    let _ = execute_command(
+                        "cmd",
+                        &["/C", "start chrome --new-window -incognito", &_program],
+                    );
+                }else {
+                    if !String::eq(&_program, "app") {
+                        let file_to_open: String = format!("{}.exe", &_program);
+                        println!("Opening {}", file_to_open);
+                        let _ = execute_command("cmd", &["/C", "start", &file_to_open]);
                     }
-                } else if key.code > 800 && key.code < 850 {
-                    // Mouse events
-                    println!("190: Mouse event: {}, {}", key.name, key.held);
-                    match key.held {
-                        true => {
-                            println!("KEY IS HELD, {}", &key.name);
-                            if !String::is_empty(&key.sentence) {
-                                let word_split = key.sentence.split(",");
-                                let mut mouse_coords: [i32; 2] = [0; 2];
-                                let mut count = 0;
-                                for word in word_split {
-                                    // println!("{:?}", &word);
-                                    mouse_coords[count] = word.parse::<i32>().expect("Error");
-                                    count += 1
-                                }
-                                println!("246: WORD SPLIT: {:?}", mouse_coords);
-                                if key.code == 801 {
-                                    // Mouse button 1
-                                    send_mouse_input_message(
-                                        mouse_coords[0],
-                                        mouse_coords[1],
-                                        false,
-                                        0x01,
-                                        key.held,
-                                    )
-                                }
-                                if key.code == 802 {
-                                    // Mouse button 2
-                                    // send_input_messages(0x0002, false, true)
+                }
+            }
+            for (j, key) in hold_keys_vector_steps.iter().enumerate() {
+                println!("{:?}", key.name);
 
-                                    send_mouse_input_message(
-                                        mouse_coords[0],
-                                        mouse_coords[1],
-                                        false,
-                                        0x02,
-                                        key.held,
-                                    )
-                                }
-                            } else {
-                                if key.code == 801 {
-                                    send_mouse_input_message(0, 0, false, 0x01, key.held)
-                                }
-                                if key.code == 802 {
-                                    // send_input_messages(0x0002, false, true)
-
-                                    send_mouse_input_message(0, 0, false, 0x02, key.held)
+                for _ in 0..key.r#loop {
+                    // println!("{}", j);
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    if key.held && key.code < 800 {
+                        // Key hold for keyboard
+                        println!("HOLDING KEY: {}", key.code);
+                        send_input_messages(key.code, false, true)
+                        // holding_keys_to_release.push(key.code)
+                    } else if key.code == 987 {
+                        // Command execute
+                        let output: Result<Output, io::Error> = execute_command("cmd", &["/C", &key.sentence]);
+                        match output {
+                            Ok(o) => {
+                                let string_match = str::from_utf8(&o.stdout).expect("Can't").split("\n");
+                                if str::contains(&key.sentence, ".jnlp")
+                                    || str::contains(&key.sentence, ".exe")
+                                {
+                                    for j in string_match {
+                                        println!("{:?}", &j);
+                                    }
                                 }
                             }
+                            _ => println!("ERROR"),
                         }
-                        false => {
-                            println!("KEY NOT HELD");
-                            if key.name.contains("move") {
-                                println!("251: Mouse event: {}, {}", key.name, key.held);
-                                let word_split = key.sentence.split(",");
-                                let mut mouse_coords: [i32; 2] = [0; 2];
-                                let mut count = 0;
-                                for word in word_split {
-                                    // println!("{:?}", &word);
-                                    mouse_coords[count] = word.parse::<i32>().expect("Error");
-                                    count += 1
-                                }
-                                send_mouse_input_message(
-                                    mouse_coords[0],
-                                    mouse_coords[1],
-                                    true,
-                                    0,
-                                    key.held,
-                                )
-                            }
-                            std::thread::sleep(std::time::Duration::from_millis(100));
-                            if key.code == 801 {
-                                if key.sentence != "" {
-                                    let word_split:Split<'_,&'static str> = key.sentence.split(",");
+                    } else if key.code > 800 && key.code < 850 {
+                        // Mouse events
+                        println!("190: Mouse event: {}, {}", key.name, key.held);
+                        match key.held {
+                            true => {
+                                println!("KEY IS HELD, {}", &key.name);
+                                if !String::is_empty(&key.sentence) {
+                                    let word_split = key.sentence.split(",");
                                     let mut mouse_coords: [i32; 2] = [0; 2];
                                     let mut count = 0;
                                     for word in word_split {
@@ -303,150 +255,192 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                         mouse_coords[count] = word.parse::<i32>().expect("Error");
                                         count += 1
                                     }
-                                    if key.r#loop > 1 {
-                                        for i in 0..key.r#loop {
-                                            println!("MOUSE CLICK: {}", i);
-                                            send_mouse_input_message(
-                                                mouse_coords[0],
-                                                mouse_coords[1],
-                                                false,
-                                                0x01,
-                                                key.held,
-                                            )
+                                    println!("246: WORD SPLIT: {:?}", mouse_coords);
+                                    if key.code == 801 {
+                                        // Mouse button 1
+                                        send_mouse_input_message(
+                                            mouse_coords[0],
+                                            mouse_coords[1],
+                                            false,
+                                            0x01,
+                                            key.held,
+                                        )
+                                    }
+                                    if key.code == 802 {
+                                        // Mouse button 2
+                                        // send_input_messages(0x0002, false, true)
+
+                                        send_mouse_input_message(
+                                            mouse_coords[0],
+                                            mouse_coords[1],
+                                            false,
+                                            0x02,
+                                            key.held,
+                                        )
+                                    }
+                                } else {
+                                    if key.code == 801 {
+                                        send_mouse_input_message(0, 0, false, 0x01, key.held)
+                                    }
+                                    if key.code == 802 {
+                                        // send_input_messages(0x0002, false, true)
+
+                                        send_mouse_input_message(0, 0, false, 0x02, key.held)
+                                    }
+                                }
+                            }
+                            false => {
+                                println!("KEY NOT HELD");
+                                if key.name.contains("move") {
+                                    println!("251: Mouse event: {}, {}", key.name, key.held);
+                                    let word_split = key.sentence.split(",");
+                                    let mut mouse_coords: [i32; 2] = [0; 2];
+                                    let mut count = 0;
+                                    for word in word_split {
+                                        // println!("{:?}", &word);
+                                        mouse_coords[count] = word.parse::<i32>().expect("Error");
+                                        count += 1
+                                    }
+                                    send_mouse_input_message(
+                                        mouse_coords[0],
+                                        mouse_coords[1],
+                                        true,
+                                        0,
+                                        key.held,
+                                    )
+                                }
+                                std::thread::sleep(std::time::Duration::from_millis(100));
+                                if key.code == 801 {
+                                    if key.sentence != "" {
+                                        let word_split:Split<'_,&'static str> = key.sentence.split(",");
+                                        let mut mouse_coords: [i32; 2] = [0; 2];
+                                        let mut count = 0;
+                                        for word in word_split {
+                                            // println!("{:?}", &word);
+                                            mouse_coords[count] = word.parse::<i32>().expect("Error");
+                                            count += 1
+                                        }
+                                        if key.r#loop > 1 {
+                                            for j in 0..key.r#loop {
+                                                println!("MOUSE CLICK: {}", j);
+                                                send_mouse_input_message(
+                                                    mouse_coords[0],
+                                                    mouse_coords[1],
+                                                    false,
+                                                    0x01,
+                                                    key.held,
+                                                )
+                                            }
+                                        } else {
+                                            send_mouse_input_message(0, 0, false, 0x01, key.held)
                                         }
                                     } else {
                                         send_mouse_input_message(0, 0, false, 0x01, key.held)
                                     }
-                                } else {
-                                    send_mouse_input_message(0, 0, false, 0x01, key.held)
                                 }
-
-                                // send_input_messages(XBUTTON1, true, true)
-                            }
-                            if key.code == 802 {
-                                send_mouse_input_message(0, 0, false, 0x02, key.held)
+                                if key.code == 802 {
+                                    send_mouse_input_message(0, 0, false, 0x02, key.held)
+                                }
                             }
                         }
-                    }
-                } else if key.code == 999 {
-                    // Wait
-                    std::thread::sleep(std::time::Duration::from_secs(key.time.into()))
-                } else if key.code == 998 || key.code == 997 || key.code == 996 {
-                    /*
-                         998 = Normal sentence
-                         997 = Base 64 string convert
-                         996 = Get Caret Postition & JavaScript
-                    */
-                    
-                    let mut _sentence_pass:Vec<u8> = vec![0];
-                    
-                    if key.code == 997 {
-                        _sentence_pass = BASE64_STANDARD.decode(&key.sentence).expect("Unable to parse");
-                    }else {
-                        _sentence_pass = key.sentence.as_bytes().to_vec();
-                    }
-                    
-                    _sentence_pass.into_iter().for_each(|f| {
-                        let mut _u16_total_key: u16 = 0;
-                        let mut hex_code: String = format!("{f:#X}");
-                        hex_code = hex_code.replace("0x", "");
-                        let first_char: String = hex_code[..1].to_owned();
-                        let second_char: String = hex_code[1..].to_owned();
-                        // println!("{}, {}",first_char, second_char);
-                        _u16_total_key = first_char.parse::<u16>().unwrap();
-                        _u16_total_key = _u16_total_key * 16;
-                        _u16_total_key = match &second_char as &str {
-                            "A" => _u16_total_key + 10,
-                            "B" => _u16_total_key + 11,
-                            "C" => _u16_total_key + 12,
-                            "D" => _u16_total_key + 13,
-                            "E" => _u16_total_key + 14,
-                            "F" => _u16_total_key + 15,
-                            _ => _u16_total_key + second_char.parse::<u16>().unwrap(),
-                        };
-                        // if second_char == "A" {
-                        //     _u16_total_key = _u16_total_key + 10;
-                        // }else if second_char == "B" {
-                        //     _u16_total_key = _u16_total_key + 11;
-                        // }else if second_char == "C" {
-                        //     _u16_total_key = _u16_total_key + 12;
-                        // }else if second_char == "D" {
-                        //     _u16_total_key = _u16_total_key + 13;
-                        // }else if second_char == "E" {
-                        //     _u16_total_key = _u16_total_key + 14;
-                        // }else if second_char == "F" {
-                        //     _u16_total_key = _u16_total_key + 15;
-                        // }else {
-                        //     _u16_total_key = _u16_total_key + second_char.parse::<u16>().unwrap()
-                        // }
-                        let find_key:Option<&KeyCodesCsv> = keys_json.keys.iter().find(|f| &f.ascii == &_u16_total_key);
-                        let mut key_from_json: u16 = 0;
-                        let mut _key_char: &str = "";
-                        let mut hold_shift: bool = false;
-                        match find_key {
-                            Some(val) => {
-                                // println!("{}, {}", val.ascii,val.name);
-                                hold_shift = val.shift;
-                                _key_char = val.name.as_str();
-                                key_from_json = val.ascii;
-                            }
-                            None => println!("ERROR"),
-                        };
-                        // check if key is less than u16 then shift
-                        let key_from_json:i16 = VkKeyScanW(key_from_json);
-                        if (key_from_json >> 8 & 1) == 1 {
-                            // let mut shift_key_state:i16 = GetKeyState(20);
-                            
-                            if hold_shift {
-                                send_multi_input_messages_from_i16(16, key_from_json);
-                            } 
-                            else {
-                                send_input_messages(20, true, true);
-                                std::thread::sleep(std::time::Duration::from_millis(100));
-                                send_input_messages_from_i16(key_from_json, true, true);
-                                // shift_key_state = GetKeyState(20);
-                                std::thread::sleep(std::time::Duration::from_millis(100));
-                                // println!("SHIFT STATE SHOULD BE 1 part 2: {:?}", shift_key_state);
-                                send_input_messages(20, true, true)
-                                // shift_key_state = GetKeyState(20);
-                                // println!("SHIFT STATE SHOULD BE 1 part 3: {:?}", shift_key_state);
-                            }
-                        } else {
-                            // let shift_key_state:i16 = GetKeyState(20);
-                            // println!("HERE!!!! SHIFT STATE SHOULD BE 0 part 4: {:?}, {:?}, {}", shift_key_state,GetKeyState(20),key_from_json);
-                            if hold_shift {
-                                send_multi_input_messages_from_i16(16, key_from_json)
+                    } else if key.code == 999 {
+                        // Wait
+                        std::thread::sleep(std::time::Duration::from_secs(key.time.into()))
+                    } else if key.code == 998 || key.code == 997 || key.code == 996 {
+                        /*
+                            998 = Normal sentence
+                            997 = Base 64 string convert
+                            996 = Get Caret Postition & JavaScript
+                        */
+                        
+                        let mut _sentence_pass:Vec<u8> = vec![0];
+                        
+                        if key.code == 997 {
+                            _sentence_pass = BASE64_STANDARD.decode(&key.sentence).expect("Unable to parse");
+                        }else {
+                            _sentence_pass = key.sentence.as_bytes().to_vec();
+                        }
+                        
+                        _sentence_pass.into_iter().for_each(|f| {
+                            let mut _u16_total_key: u16 = 0;
+                            let mut hex_code: String = format!("{f:#X}");
+                            hex_code = hex_code.replace("0x", "");
+                            let first_char: String = hex_code[..1].to_owned();
+                            let second_char: String = hex_code[1..].to_owned();
+                            // println!("{}, {}",first_char, second_char);
+                            _u16_total_key = first_char.parse::<u16>().unwrap();
+                            _u16_total_key = _u16_total_key * 16;
+                            _u16_total_key = match &second_char as &str {
+                                "A" => _u16_total_key + 10,
+                                "B" => _u16_total_key + 11,
+                                "C" => _u16_total_key + 12,
+                                "D" => _u16_total_key + 13,
+                                "E" => _u16_total_key + 14,
+                                "F" => _u16_total_key + 15,
+                                _ => _u16_total_key + second_char.parse::<u16>().unwrap(),
+                            };
+                            let find_key:Option<&KeyCodesCsv> = keys_json.keys.iter().find(|f| &f.ascii == &_u16_total_key);
+                            let mut key_from_json: u16 = 0;
+                            let mut _key_char: &str = "";
+                            let mut hold_shift: bool = false;
+                            match find_key {
+                                Some(val) => {
+                                    // println!("{}, {}", val.ascii,val.name);
+                                    hold_shift = val.shift;
+                                    _key_char = val.name.as_str();
+                                    key_from_json = val.ascii;
+                                }
+                                None => println!("ERROR"),
+                            };
+                            // check if key is less than u16 then shift
+                            let key_from_json:i16 = VkKeyScanW(key_from_json);
+                            if (key_from_json >> 8 & 1) == 1 {
+                                
+                                if hold_shift {
+                                    send_multi_input_messages_from_i16(16, key_from_json);
+                                } 
+                                else {
+                                    send_input_messages(20, true, true);
+                                    std::thread::sleep(std::time::Duration::from_millis(100));
+                                    send_input_messages_from_i16(key_from_json, true, true);
+                                    std::thread::sleep(std::time::Duration::from_millis(100));
+                                    send_input_messages(20, true, true)
+                                }
                             } else {
-                                send_input_messages_from_i16(key_from_json, true, true)
+                                if hold_shift {
+                                    send_multi_input_messages_from_i16(16, key_from_json)
+                                } else {
+                                    send_input_messages_from_i16(key_from_json, true, true)
+                                }
+                            }
+                            // std::thread::sleep(std::time::Duration::from_millis(100))
+                        });
+                    } else if key.code == 995 {
+                        // Window Title
+                        let mut _window_title: Vec<u8> = vec![0; 80];
+                        let _ = GetWindowTextA(_current_window, &mut _window_title);
+                        std::thread::sleep(std::time::Duration::from_millis(500));
+
+                        let mut result_window_title: String = String::from_utf8(_window_title).expect("Unable to export to string");
+                        result_window_title = String::from(result_window_title.trim_matches(char::from(0)));
+                        println!("Check Title: {:?}", result_window_title);
+                        if !result_window_title.contains(&key.sentence) {
+                            send_input_messages(hold_keys_vector_steps[j-1].code, true, true)
+                        }
+                    } else if key.code == 994 {
+                        // Clipboard
+                        let clipboard:Result<(), windows::core::Error> = OpenClipboard(None);
+                        match clipboard {
+                            Err(e) => {
+                                println!("{:?}", e)
+                            },
+                            _ => {
+                                println!("Some")
                             }
                         }
-                        // std::thread::sleep(std::time::Duration::from_millis(100))
-                    });
-                } else if key.code == 995 {
-                    // Window Title
-                    let mut _window_title: Vec<u8> = vec![0; 80];
-                    let _ = GetWindowTextA(_current_window, &mut _window_title);
-                    std::thread::sleep(std::time::Duration::from_millis(500));
-
-                    let mut result_window_title: String = String::from_utf8(_window_title).expect("Unable to export to string");
-                    result_window_title = String::from(result_window_title.trim_matches(char::from(0)));
-                    println!("Check Title: {:?}", result_window_title);
-                    if !result_window_title.contains(&key.sentence) {
-                        send_input_messages(hold_keys_vector_steps[i-1].code, true, true)
+                    }else {
+                        send_input_messages(key.code, true, true)
                     }
-                } else if key.code == 994 {
-                    // Clipboard
-                    let clipboard:Result<(), windows::core::Error> = OpenClipboard(None);
-                    match clipboard {
-                        Err(e) => {
-                            println!("{:?}", e)
-                        },
-                        _ => {
-                            println!("Some")
-                        }
-                    }
-                }else {
-                    send_input_messages(key.code, true, true)
                 }
             }
         }
@@ -582,14 +576,6 @@ fn send_multi_input_messages_from_i16(virtual_key_num: i16, virtual_key_num_two:
             &[input_release_struct_key_two],
             core::mem::size_of::<INPUT>() as i32,
         );
-        // let shift_key_state:i16 = GetKeyState(get_key_state_int as i32);
-        // println!("Shift Key State: {:?}", shift_key_state);
-        // if shift_key_state == 1 {
-        //     let _ = SendInput(
-        //         &[input_release_struct],
-        //         core::mem::size_of::<INPUT>() as i32,
-        //     );
-        // }
     }
 }
 fn send_input_messages(virtual_key_num: u16, release_key: bool, individial_press: bool) {
@@ -611,15 +597,6 @@ fn send_input_messages(virtual_key_num: u16, release_key: bool, individial_press
             dwExtraInfo: 0x0008 as usize,
         },
     };
-    // let release_shift: INPUT_0 = INPUT_0 {
-    //     ki: KEYBDINPUT {
-    //         wVk: VIRTUAL_KEY(160),
-    //         wScan: 0,
-    //         dwFlags: KEYEVENTF_KEYUP | KEYEVENTF_UNICODE,
-    //         time: 0,
-    //         dwExtraInfo: 0x0008 as usize,
-    //     },
-    // };
     let input_struct: INPUT = INPUT {
         r#type: INPUT_TYPE(1),
         Anonymous: input_zero,
@@ -628,15 +605,7 @@ fn send_input_messages(virtual_key_num: u16, release_key: bool, individial_press
         r#type: INPUT_TYPE(1),
         Anonymous: release_zero,
     };
-    // let input_release_shift_struct: INPUT = INPUT {
-    //     r#type: INPUT_TYPE(1),
-    //     Anonymous: release_shift,
-    // };
-    // let struct_size:i32 = core::mem::size_of::<INPUT>() as i32;
     unsafe {
-        // let get_key_state_int = virtual_key_num as i32;
-
-        // let _ = GetKeyState(get_key_state_int);
         match individial_press {
             true => {
                 let _ = SendInput(&[input_struct], core::mem::size_of::<INPUT>() as i32);
@@ -657,17 +626,10 @@ fn send_input_messages(virtual_key_num: u16, release_key: bool, individial_press
                 );
             }
         }
-        // let _ = SendInput(
-        //     &[input_release_shift_struct],
-        //     core::mem::size_of::<INPUT>() as i32,
-        // );
-
-        // println!("{:?}", key_state);
     }
 }
 
 fn execute_command(exe: &str, args: &[&str]) -> Result<Output, std::io::Error> {
-    // let command:Output = Command::new(exe).args(&*args).output().expect("Can't run");
     std::process::Command::new(exe).args(&*args).output()
 }
 fn get_mouse_events() {
