@@ -643,23 +643,27 @@ fn send_input_messages_from_i16(virtual_key_num: i16, release_key: bool, individ
         Anonymous: release_zero,
     };
     // let struct_size:i32 = core::mem::size_of::<INPUT>() as i32;
-    unsafe {
-        if individial_press {
+    if individial_press {
             // println!("{:?}", key_state);
             if release_key {
+                unsafe {
+                    let _ = SendInput(
+                        &[input_release_struct],
+                        core::mem::size_of::<INPUT>() as i32,
+                    );
+                }
+            }
+            unsafe {
+                let _ = SendInput(&[input_struct], core::mem::size_of::<INPUT>() as i32);
+            }
+        } else {
+            unsafe {
                 let _ = SendInput(
                     &[input_release_struct],
                     core::mem::size_of::<INPUT>() as i32,
                 );
             }
-            let _ = SendInput(&[input_struct], core::mem::size_of::<INPUT>() as i32);
-        } else {
-            let _ = SendInput(
-                &[input_release_struct],
-                core::mem::size_of::<INPUT>() as i32,
-            );
         }
-    }
 }
 fn send_multi_input_messages_from_i16(virtual_key_num: i16, virtual_key_num_two: i16) {
     let get_key_state_int = virtual_key_num as u16;
@@ -782,29 +786,33 @@ fn send_input_messages(virtual_key_num: u16, release_key: bool, individial_press
     //     r#type: INPUT_TYPE(1),
     //     Anonymous: release_shift,
     // };
-    // let struct_size:i32 = core::mem::size_of::<INPUT>() as i32;
-    unsafe {
         // let get_key_state_int = virtual_key_num as i32;
 
         // let _ = GetKeyState(get_key_state_int);
         match individial_press {
             true => {
-                let _ = SendInput(&[input_struct], core::mem::size_of::<INPUT>() as i32);
+                unsafe {
+                    let _ = SendInput(&[input_struct], core::mem::size_of::<INPUT>() as i32);
+                }
                 match release_key {
                     true => {
-                        let _ = SendInput(
-                            &[input_release_struct],
-                            core::mem::size_of::<INPUT>() as i32,
-                        );
+                        unsafe {
+                            let _ = SendInput(
+                                &[input_release_struct],
+                                core::mem::size_of::<INPUT>() as i32,
+                            );
+                        }
                     }
                     false => println!("Not released"),
                 }
             }
             false => {
-                let _ = SendInput(
-                    &[input_release_struct],
-                    core::mem::size_of::<INPUT>() as i32,
-                );
+                unsafe {
+                    let _ = SendInput(
+                        &[input_release_struct],
+                        core::mem::size_of::<INPUT>() as i32,
+                    );
+                }
             }
         }
         // let _ = SendInput(
@@ -813,7 +821,7 @@ fn send_input_messages(virtual_key_num: u16, release_key: bool, individial_press
         // );
 
         // println!("{:?}", key_state);
-    }
+    
 }
 fn execute_command(exe: &str, args: &[&str]) -> Result<Output, std::io::Error> {
     // let command:Output = Command::new(exe).args(&*args).output().expect("Can't run");
@@ -957,13 +965,15 @@ fn send_mouse_input_message(x: i32, y: i32, move_mouse: bool, mouse_button: u16,
     }
     unsafe {
         let _ = SendInput(&[_input_mouse_struct], core::mem::size_of::<INPUT>() as i32);
-
+    }
         std::thread::sleep(std::time::Duration::from_millis(100));
         match held {
             true => println!("Held"),
             false => match move_mouse {
                 true => {
-                    let _ = SendInput(&[_input_mouse_struct], core::mem::size_of::<INPUT>() as i32);
+                    unsafe {
+                        let _ = SendInput(&[_input_mouse_struct], core::mem::size_of::<INPUT>() as i32);
+                    }
                 }
                 false => {
                     match mouse_button {
@@ -1000,11 +1010,13 @@ fn send_mouse_input_message(x: i32, y: i32, move_mouse: bool, mouse_button: u16,
                         _ => println!("ERROR"),
                     }
                     println!("641: {:?}", point_struct);
-                    let _ = SendInput(&[_input_mouse_struct], core::mem::size_of::<INPUT>() as i32);
+                    unsafe {
+                        let _ = SendInput(&[_input_mouse_struct], core::mem::size_of::<INPUT>() as i32);
+                    }
                 }
             },
         }
-    }
+    
 }
 async fn get_token() -> Result<GraphToken, Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
