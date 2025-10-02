@@ -25,3 +25,4 @@ Creates a log on what action is performed.
         - held: if the key is held e.g. for alt + tab. Alt is held and tab is not held
         - sentence: (code has to be 998), adding sentence, adds the sentence into the app or website
         - loop: how many times this object is used
+        - time: mainly for Delay in seconds

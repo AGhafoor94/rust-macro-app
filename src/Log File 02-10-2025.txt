@@ -1,0 +1,28 @@
+02/10/2025
+
+[18:23:10:851]: 
+Using file: command.json
+[18:23:10:877]: Type of app: app & Number of steps: 2
+[18:23:12:643]: Current Window Text: main.rs - rust-macro-app - Visual Studio Code
+
+[18:23:13:161]: Starting Current Loop Iteration: 1 of 1
+
+[18:23:13:264]: Waiting for: 1 seconds
+[18:23:14:367]: Running Command: (cd C:\Users\adnan.ghafoor\Downloads && dir/O:-D /b *.jnlp*)
+[18:23:14:430]: Ended Current Loop Iteration: 1 of 1
+
+[18:23:14:531]: Ended Macro
+
+
+[18:24:30:693]: Using file: command.json
+[18:24:30:693]: Type of app: app & Number of steps: 2
+[18:24:32:468]: Current Window Text: main.rs - rust-macro-app - Visual Studio Code
+
+[18:24:32:969]: Starting Current Loop Iteration: 1 of 1
+
+[18:24:33:72]: Waiting for: 1 seconds
+[18:24:34:175]: Running Command: (cd C:\Users\adnan.ghafoor\Downloads && dir/O:-D /b *.jnlp*)
+[18:24:34:204]: Ended Current Loop Iteration: 1 of 1
+
+[18:24:34:306]: Ended Macro
+

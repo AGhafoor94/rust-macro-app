@@ -160,7 +160,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     update_log_file(
         &log_file_path,
-        format!("\nUsing file: {}.json", &args[1]).as_str(),
+        format!("Using file: {}.json", &args[1]).as_str(),
     );
     let mut buffer: String = String::new();
     let _ = file.read_to_string(&mut buffer);
@@ -306,7 +306,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // let mut holding_keys_to_release: Vec<u16> = Vec::new();
     let _mouse_movements: Vec<Steps> = Vec::new();
     for i in 0..data.r#loop as u8 {
-        println!("Current Loop Iteration: {} of {}", i, data.r#loop);
 
         // if _current_system_time.wHour == 15 && _current_system_time.wMinute > 0 {
         //     let _ = LockWorkStation();
@@ -315,7 +314,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         update_log_file(
             &log_file_path,
             format!(
-                "Starting Current Loop Iteration: {} of {}\n",
+                "Starting Current Loop Iteration: {} of {}",
                 (i + 1),
                 data.r#loop
             )
@@ -1204,7 +1203,7 @@ fn get_current_window_heading_text(log_file_path: &str, current_window: HWND) ->
     println!("Current Window Text: {}", result_window_text);
     update_log_file(
         &log_file_path,
-        format!("Current Window Text: {}\n", result_window_text).as_str(),
+        format!("Current Window Text: {}", result_window_text).as_str(),
     );
     result_window_text
 }
