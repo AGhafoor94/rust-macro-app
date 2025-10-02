@@ -1,5 +1,9 @@
 {
     "appName": "chrome",
+    "loop": 1,
+    "readCsv": "",
+    "hotkey": "",
+    "description":"",
     "app": [
         {
             "appValue": "https://salford-nhs.mfcloud.co.uk/TMS/Dashboard/DashboardHome/Index?cs=8510794",

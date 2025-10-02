@@ -1,5 +1,9 @@
 {
     "appName": "notepad",
+    "loop": 1,
+    "readCsv": "",
+    "hotkey": "",
+    "description":"",
     "app": [
         {
             "appValue": "notepad",

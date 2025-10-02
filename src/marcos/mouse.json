@@ -1,5 +1,9 @@
 {
     "appName": "Move files",
+    "loop": 1,
+    "readCsv": "",
+    "hotkey": "",
+    "description":"",
     "app": [
         {
             "appValue": "app",

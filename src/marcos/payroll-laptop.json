@@ -1,6 +1,9 @@
 {
     "appName": "payroll - Open AW8",
     "description": "Open payroll website and click onto notifications",
+    "loop": 1,
+    "readCsv": "",
+    "hotkey": "",
     "app": [
         {
             "appValue": "",

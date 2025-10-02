@@ -1,6 +1,9 @@
 {
     "appName": "Test 2",
     "description": "Test 2",
+    "loop": 1,
+    "readCsv": "",
+    "hotkey": "",
     "app": [
         {
             "appValue": "file:///C:/Users/adnan.ghafoor/Downloads/payroll%20pages/iframe.html",
