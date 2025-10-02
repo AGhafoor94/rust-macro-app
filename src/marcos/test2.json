@@ -1,0 +1,68 @@
+{
+    "appName": "Test 2",
+    "description": "Test 2",
+    "app": [
+        {
+            "appValue": "file:///C:/Users/adnan.ghafoor/Downloads/payroll%20pages/iframe.html",
+            "websiteOpen": true,
+            "steps": [
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 2   ,
+                    "loop": 1
+                },
+                {
+                    "name":"Control",
+                    "code": 162,
+                    "held": true,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Shift",
+                    "code": 160,
+                    "held": true,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"j",
+                    "code": 74,
+                    "held": false,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 2   ,
+                    "loop": 1
+                },
+                {
+                    "name":"Control",
+                    "code": 162,
+                    "held": false,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Shift",
+                    "code": 160,
+                    "held": false,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 1
+                }
+            ]
+        }
+    ]
+}

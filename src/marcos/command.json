@@ -1,0 +1,27 @@
+{
+    "appName": "notepad",
+    "app": [
+        {
+            "appValue": "app",
+            "websiteOpen": false,
+            "steps": [
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 1,
+                    "loop": 1
+                },
+                {
+                    "name":"Command",
+                    "code": 987,
+                    "sentence": "cd C:\\Users\\adnan.ghafoor\\Downloads && dir/O:-D /b *.jnlp*",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                }
+            ]
+        }
+    ]
+}

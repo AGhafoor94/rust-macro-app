@@ -1,0 +1,123 @@
+{
+    "appName": "file explorer",
+    "app": [
+        {
+            "appValue": "explorer",
+            "websiteOpen": false,
+            "steps": [
+                {
+                    "name":"Wait key",
+                    "code": 999,
+                    "sentence": "",
+                    "held": false,
+                    "time": 1,
+                    "loop": 1
+                },
+                {
+                    "name":"TAB key",
+                    "code": 6,
+                    "sentence": "",
+                    "held": true,
+                    "time": 0,
+                    "loop": 6
+                },
+                {
+                    "name":"Down key",
+                    "code": 40,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Right key",
+                    "code": 39,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Space key",
+                    "code": 32,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Enter key",
+                    "code": 13,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Mouse move",
+                    "code": 804,
+                    "sentence": "190,290",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Mouse left click",
+                    "code": 801,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 3
+                },
+                {
+                    "name":"Wait key",
+                    "code": 999,
+                    "sentence": "",
+                    "held": false,
+                    "time": 5,
+                    "loop": 1
+                },
+                {
+                    "name":"Mouse move",
+                    "code": 804,
+                    "sentence": "-50,-135",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Mouse right click",
+                    "code": 802,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait key",
+                    "code": 999,
+                    "sentence": "",
+                    "held": false,
+                    "time": 2,
+                    "loop": 1
+                },
+                {
+                    "name":"Down key",
+                    "code": 40,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 11
+                },
+                {
+                    "name":"Enter key",
+                    "code": 13,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                }
+            ]
+        }
+    ]
+}

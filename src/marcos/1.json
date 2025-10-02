@@ -1,0 +1,99 @@
+{
+    "appName": "chrome",
+    "app": [
+        {
+            "appValue": "https://salford-nhs.mfcloud.co.uk/TMS/Dashboard/DashboardHome/Index?cs=8510794",
+            "websiteOpen": true,
+            "steps": [
+                {
+                    "name":"Print Screen key",
+                    "code": 44,
+                    "held": false,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 10,
+                    "loop": 1
+                },
+                {
+                    "name":"TAB key",
+                    "code": 9,
+                    "held": true,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 9
+                },
+                {
+                    "name":"Enter key",
+                    "code": 13,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"ALT key",
+                    "code": 164,
+                    "held": true,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"TAB key",
+                    "code": 9,
+                    "held": true,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 3
+                },
+                {
+                    "name":"ALT key",
+                    "code": 164,
+                    "held": false,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Left Windows key",
+                    "code": 91,
+                    "held": false,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"ESC key",
+                    "code": 27,
+                    "held": false,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Volume Mute key",
+                    "code": 95,
+                    "held": false,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 5,
+                    "loop": 1
+                }
+            ]
+        }
+    ]
+}

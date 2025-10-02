@@ -1,0 +1,15 @@
+[package]
+name = "rust-macro"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "^1.0.210", features = ["derive"] }
+
+serde_json = "^1.0.48"
+windows = { version = "^0.56.0", features = [ "Win32_Graphics_Gdi", "Win32_Foundation", "Win32_Security", "Win32_System_Threading","Win32_System_DataExchange", "Win32_System_SystemInformation", "Win32_System_Shutdown", "Win32_UI_WindowsAndMessaging", "Win32_System_LibraryLoader", "Win32_UI_Input_KeyboardAndMouse","Win32_Graphics_Direct2D" ] }
+reqwest = { version = "^0.12", features = ["json"] }
+tokio = { version = "^1", features = ["full"] }
+base64 = "0.22.1"

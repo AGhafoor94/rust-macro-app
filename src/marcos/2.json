@@ -1,0 +1,59 @@
+{
+    "appName": "Open Word",
+    "app": [
+        {
+            "appValue": "WINWORD",
+            "websiteOpen": false,
+            "steps": [
+                {
+                    "name":"Wait key",
+                    "code": 999,
+                    "sentence": "",
+                    "held": false,
+                    "time": 1,
+                    "loop": 1
+                },
+                {
+                    "name":"Enter key",
+                    "code": 13,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait key",
+                    "code": 999,
+                    "sentence": "",
+                    "held": false,
+                    "time": 1,
+                    "loop": 1
+                },
+                {
+                    "name":"TAB key",
+                    "code": 9,
+                    "sentence": "",
+                    "held": true,
+                    "time": 0,
+                    "loop": 7
+                },
+                {
+                    "name":"Sentence",
+                    "code": 998,
+                    "sentence": "This is A TeSt to See iF this WOrkS@",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait key",
+                    "code": 999,
+                    "sentence": "",
+                    "held": false,
+                    "time": 5,
+                    "loop": 1
+                }
+            ]
+        }
+    ]
+}
