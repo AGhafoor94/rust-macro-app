@@ -317,7 +317,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             format!(
                 "Starting Current Loop Iteration: {} of {}",
                 (i + 1),
-                data.r#loop
+                loops
             )
             .as_str(),
         );
@@ -596,7 +596,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             format!(
                 "Ended Current Loop Iteration: {} of {}\n",
                 (i + 1),
-                data.r#loop
+                loops
             )
             .as_str(),
         );
