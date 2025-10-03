@@ -116,7 +116,7 @@
                 {
                     "name":"Command",
                     "code": 987,
-                    "sentence": "start chrome -incognito /new-tab https://nww.pensionsagency.nhs.uk/Poltest_forms/Employers/forms/sd55not/sd55_entry.cfm",
+                    "sentence": "start msedge -incognito /new-tab https://nww.pensionsagency.nhs.uk/Poltest_forms/Employers/forms/sd55not/sd55_entry.cfm",
                     "held": false,
                     "time": 0,
                     "loop": 1
@@ -139,7 +139,7 @@
                 },
                 {
                     "name":"Sentence",
-                    "code": 997,
+                    "code": 998,
                     "sentence": "window.document.querySelectorAll(\"iframe\")[0].contentWindow.document.querySelectorAll(\"table\")[1]",
                     "held": false,
                     "time": 0,

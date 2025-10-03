@@ -35,7 +35,7 @@ use std::{
 struct Macro {
     app_name: String,
     app: Vec<App>,
-    r#loop: u8,
+    r#loop: usize,
     hotkey: String,
     read_csv: String,
 }
@@ -122,17 +122,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut keys_file: File = File::open(format!(".\\{name}.json", name = "keys")).unwrap();
     // println!("{:?}", response.access_token);
     let _ = keys_file.read_to_string(&mut keys_buffer);
-    let directory_files: Result<Output, std::io::Error> =
-        execute_command("cmd", &["/C", "dir /b /a-d"]);
+    // let directory_files: Result<Output, std::io::Error> = execute_command("cmd", &["/C", "dir /b /a-d"]);
 
     let keys_json: Keys = serde_json::from_str(&keys_buffer).expect("Unable to get data");
     // keys_json.keys.iter().for_each(|f| {
     //     println!("{}, {}", &f.name, &f.ascii);
     // });
-    match directory_files {
-        Ok(v) => println!("{:?}", v),
-        _ => println!("Error"),
-    };
+    // match directory_files {
+    //     Ok(v) => println!("{:?}", v),
+    //     _ => println!("Error"),
+    // };
     // let mut file_name: String = String::new();
     // let _ = io::stdin().read_line(&mut file_name);
     // let mut file:File = File::open(format!(".\\marcos\\{name}.json", name=file_name.trim())).unwrap();
@@ -151,11 +150,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let _ = File::create(&log_file_path);
             let _ = buffer_data.push_str(format!("Using file: {}.json", &args[1]).as_str());
             fs::write(format!(".\\{}", &log_file_path), log_date.replace("-", "/")).expect("Error");
-            println!("error: {}", e)
+            update_log_file(&log_file_path,format!("File didn't exist. Created log file: {}", e).as_str())
         }
-        _ => {
-            println!("File available in directory");
-        }
+        _ => update_log_file(&log_file_path,"Log file created")
     }
 
     update_log_file(
@@ -168,8 +165,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // println!("{:?}",&buffer);
 
     let app: Vec<App> = data.app;
-
-    // let open_app: Result<Output, std::io::Error> = execute_command("cmd",&["/C",format!("start {data}", data = & data.app_name).as_str(), "https://github.com/"]);
+    let mut loops = data.r#loop;
     // let virtual_keys_vec:Vec<u16> = vec![0x5B,0x90,0x91,0x14];
     let mut hold_keys_vector_steps: Vec<Steps> = Vec::new();
     // let mut hold_keys_vector:Vec<u16> = Vec::new();
@@ -177,7 +173,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut _program: String = "".to_owned();
     let mut website: bool = false;
     let continue_app: bool = true;
-
+    if !data.read_csv.is_empty() {
+        let mut lines_to_read: io::BufReader<File> = std::io::BufReader::new(File::open(data.read_csv)?);
+        let mut buffer_csv_lines:String = String::new();
+        let _ = &lines_to_read.read_to_string(&mut buffer_csv_lines);
+        let _ = &buffer_csv_lines.split("\r\n").into_iter().for_each(|line| println!("{}", line));
+        update_log_file(&log_file_path,format!("Number of loops updated from {} to {}", data.r#loop, &buffer_csv_lines.split("\r\n").clone().count()).as_str());
+        loops = buffer_csv_lines.split("\r\n").clone().count();
+    }
     // println!("{}", log_date);
     if !continue_app {
         std::process::exit(0x000)
@@ -190,7 +193,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             hot_keys.push(word.trim().parse::<i32>().expect("Error"));
             // println!("{:?}", &word.trim().parse::<u8>().expect("Error"));
         }
-        println!("Waiting for KEYS: {},{}", hot_keys[0], hot_keys[1]);
         let mut key_one: bool = get_key_state(hot_keys[0]);
         let mut key_two: bool = get_key_state(hot_keys[1]);
         // println!("keys: {:?},{}, {:?},{}",hot_keys[0], key_one, hot_keys[1], key_two);
@@ -228,7 +230,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         } else {
             if app.website_open {
-                println!("OPENING WEBSITE");
                 _program = app.app_value.to_owned();
                 website = true;
                 // let website_to_open = &app[0].app_value;
@@ -305,7 +306,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if _result_window_text.to_lowercase().contains("login") {}
     // let mut holding_keys_to_release: Vec<u16> = Vec::new();
     let _mouse_movements: Vec<Steps> = Vec::new();
-    for i in 0..data.r#loop as u8 {
+    for i in 0..loops {
 
         // if _current_system_time.wHour == 15 && _current_system_time.wMinute > 0 {
         //     let _ = LockWorkStation();
@@ -335,7 +336,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 if !String::eq(&_program, "app") {
                     let file_to_open: String = format!("{}.exe", &_program);
-                    println!("Opening {}", file_to_open);
                     let _ = execute_command("cmd", &["/C", "start", &file_to_open]);
                     update_log_file(
                         &log_file_path,
@@ -347,8 +347,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
         for (j, key) in hold_keys_vector_steps.iter().enumerate() {
-            println!("{:?}", key.name);
-
             for _ in 0..key.r#loop {
                 // println!("{}", j);
                 std::thread::sleep(std::time::Duration::from_millis(100));
@@ -381,14 +379,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 }
                             }
                         }
-                        _ => println!("ERROR"),
+                        Err(e) => update_log_file(&log_file_path,format!("Error Running Command: {}, Sentence: {}", e, &key.sentence).as_str()),
                     }
                 } else if key.code > 800 && key.code < 850 {
                     // Mouse events
-                    println!("190: Mouse event: {}, {}", key.name, key.held);
                     match key.held {
                         true => {
-                            println!("KEY IS HELD, {}", &key.name);
                             if !String::is_empty(&key.sentence) {
                                 update_log_file(
                                     &log_file_path,
@@ -402,7 +398,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     mouse_coords[count] = word.parse::<i32>().expect("Error");
                                     count += 1
                                 }
-                                println!("246: WORD SPLIT: {:?}", mouse_coords);
                                 if key.code == 801 {
                                     // Mouse button 1
                                     update_log_file(
@@ -415,6 +410,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                         false,
                                         0x01,
                                         key.held,
+                                        &log_file_path
                                     )
                                 }
                                 if key.code == 802 {
@@ -431,6 +427,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                         false,
                                         0x02,
                                         key.held,
+                                        &log_file_path
                                     )
                                 }
                             } else {
@@ -439,7 +436,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                         &log_file_path,
                                         format!("Pressing Left Click").as_str(),
                                     );
-                                    send_mouse_input_message(0, 0, false, 0x01, key.held)
+                                    send_mouse_input_message(0, 0, false, 0x01, key.held,
+                                    &log_file_path)
                                 }
                                 if key.code == 802 {
                                     // send_input_messages(0x0002, false, true)
@@ -448,14 +446,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                         &log_file_path,
                                         format!("Pressing Right Click").as_str(),
                                     );
-                                    send_mouse_input_message(0, 0, false, 0x02, key.held)
+                                    send_mouse_input_message(0, 0, false, 0x02, key.held,
+                                    &log_file_path)
                                 }
                             }
                         }
                         false => {
-                            println!("KEY NOT HELD");
                             if key.name.contains("move") {
-                                println!("251: Mouse event: {}, {}", key.name, key.held);
                                 let word_split = key.sentence.split(",");
                                 let mut mouse_coords: [i32; 2] = [0; 2];
                                 let mut count: usize = 0;
@@ -478,6 +475,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     true,
                                     0,
                                     key.held,
+                                    &log_file_path
                                 )
                             }
                             std::thread::sleep(std::time::Duration::from_millis(100));
@@ -509,6 +507,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                                 false,
                                                 0x01,
                                                 key.held,
+                                                &log_file_path
                                             )
                                         }
                                     } else {
@@ -517,14 +516,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                             format!("Left Click. Key Held: {}: ", key.held)
                                                 .as_str(),
                                         );
-                                        send_mouse_input_message(0, 0, false, 0x01, key.held)
+                                        send_mouse_input_message(0, 0, false, 0x01, key.held,&log_file_path)
                                     }
                                 } else {
                                     update_log_file(
                                         &log_file_path,
                                         format!("Left Click. Key Held: {}: ", key.held).as_str(),
                                     );
-                                    send_mouse_input_message(0, 0, false, 0x01, key.held)
+                                    send_mouse_input_message(0, 0, false, 0x01, key.held,&log_file_path)
                                 }
 
                                 // send_input_messages(XBUTTON1, true, true)
@@ -534,7 +533,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     &log_file_path,
                                     format!("Right Click. Key Held: {}: ", key.held).as_str(),
                                 );
-                                send_mouse_input_message(0, 0, false, 0x02, key.held)
+                                send_mouse_input_message(0, 0, false, 0x02, key.held,&log_file_path)
                             }
                         }
                     }
@@ -559,7 +558,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         )
                         .as_str(),
                     );
-                    add_sentence(&key.sentence, &key.code, &keys_json);
+                    add_sentence(&key.sentence, &key.code, &keys_json, &log_file_path);
                 } else if key.code == 995 {
                     // Window Title
                     std::thread::sleep(std::time::Duration::from_millis(100));
@@ -574,9 +573,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     unsafe {
                         let clipboard: Result<(), windows::core::Error> = OpenClipboard(None);
                         match clipboard {
-                            Err(e) => {
-                                println!("{:?}", e)
-                            }
+                            Err(e) => update_log_file(&log_file_path,format!("Error opening Clipboard: {}", e).as_str()),
                             Ok(_) => {
                                 let _ = SetClipboardData(0x001, None);
                                 let clipboard_data = GetClipboardData(0x001);
@@ -841,7 +838,7 @@ fn get_mouse_events() {
         dwExtraInfo: 0x01,
     };
     unsafe {
-        let mouse_move_points = GetMouseMovePointsEx(
+        let _ = GetMouseMovePointsEx(
             core::mem::size_of::<MOUSEMOVEPOINT>() as u32,
             &_MOUSE_MOVE_POINT_STRUCT_CONST,
             &mut [_mouse_move_point_struct],
@@ -849,8 +846,7 @@ fn get_mouse_events() {
         );
     }
 }
-fn send_mouse_input_message(x: i32, y: i32, move_mouse: bool, mouse_button: u16, held: bool) {
-    println!("528: MOUSE EVENT, held: {}", held);
+fn send_mouse_input_message(x: i32, y: i32, move_mouse: bool, mouse_button: u16, held: bool, log_file_path: &str) {
     let mut point_struct: POINT = POINT {
         ..Default::default()
     };
@@ -957,7 +953,7 @@ fn send_mouse_input_message(x: i32, y: i32, move_mouse: bool, mouse_button: u16,
                         },
                     };
                 }
-                _ => println!("ERROR"),
+                _ => update_log_file(log_file_path,format!("Error clicking mouse {}", mouse_button).as_str()),
             }
 
             println!("582: {:?}", point_struct);
@@ -968,7 +964,7 @@ fn send_mouse_input_message(x: i32, y: i32, move_mouse: bool, mouse_button: u16,
     }
         std::thread::sleep(std::time::Duration::from_millis(100));
         match held {
-            true => println!("Held"),
+            true => update_log_file(log_file_path,"Mouse button held"),
             false => match move_mouse {
                 true => {
                     unsafe {
@@ -1007,9 +1003,8 @@ fn send_mouse_input_message(x: i32, y: i32, move_mouse: bool, mouse_button: u16,
                                 },
                             };
                         }
-                        _ => println!("ERROR"),
+                        _ => update_log_file(log_file_path,format!("Error clicking mouse {}", mouse_button).as_str()),
                     }
-                    println!("641: {:?}", point_struct);
                     unsafe {
                         let _ = SendInput(&[_input_mouse_struct], core::mem::size_of::<INPUT>() as i32);
                     }
@@ -1077,7 +1072,7 @@ fn copy_all_files_in_directory(
     }
     Ok(())
 }
-fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys) {
+fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &str) {
     let mut _sentence_pass: Vec<u8> = vec![0];
 
     if *code == 997 {
@@ -1131,7 +1126,7 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys) {
                 _key_char = val.name.as_str();
                 key_from_json = val.ascii;
             }
-            None => println!("ERROR"),
+            None => update_log_file(log_file_path,"Can't find matching key"),
         };
         // check if key is less than u16 then shift
         unsafe {
