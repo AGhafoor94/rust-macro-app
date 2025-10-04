@@ -175,10 +175,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let continue_app: bool = true;
     let mut csv_lines:Vec<&str> = vec![];
     let mut _read_csv_file:bool = false;
+    let mut buffer_csv_lines:String = String::new();
     if !data.read_csv.is_empty() {
         _read_csv_file = true;
         let mut lines_to_read: io::BufReader<File> = std::io::BufReader::new(File::open(data.read_csv)?);
-        let mut buffer_csv_lines:String = String::new();
         let _ = &lines_to_read.read_to_string(&mut buffer_csv_lines);
         // let _ = &buffer_csv_lines.split("\r\n").into_iter().for_each(|line| println!("{}", line));
         let _ = &buffer_csv_lines.split("\r\n").into_iter().for_each(|line| csv_lines.push(line));
