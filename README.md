@@ -14,7 +14,7 @@ Creates a log on what action is performed.
 - readCsv: Reads a CSV file given a path
 
 - app array:
-    - appValue: website / app exe
+    - appValue: website url/ "app" or an exe
     - websiteOpen: true or false (appValue -> exe ? false)
     - steps array:
         - name: description
@@ -25,7 +25,7 @@ Creates a log on what action is performed.
                 - 801: left click
                 - 802: right click
                 - 804: moving mouse
-            - 987 = Command (runs command in sentence property that can be run in cmd)
+            - 987 = Command (runs commands that are used in cmd in the sentence property)
             - everything else are key presses
         - held: if the key is held e.g. for alt + tab. Alt is held and tab is not held
             - Key has to be added again to release the key with held set to false
