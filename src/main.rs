@@ -1,10 +1,18 @@
+use std::{
+    env::args,
+    fs::{self, DirEntry, File, FileType},
+    io::{self, Read},
+    path::Path,
+    process::Output,
+    str::Split,
+};
+use serde::{Deserialize, Serialize};
 use base64::Engine;
-use reqwest::header::{ACCEPT, CONTENT_TYPE};
+use base64::prelude::BASE64_STANDARD;
 // cargo build --release app.exe
 // #![windows_subsystem = "windows"]
-use base64::prelude::BASE64_STANDARD;
 use reqwest::header::HeaderMap;
-use serde::{Deserialize, Serialize};
+use reqwest::header::{ACCEPT, CONTENT_TYPE};
 use windows::Win32::{
     Foundation::*,
     System::{
@@ -14,21 +22,6 @@ use windows::Win32::{
     },
     UI::{Input::KeyboardAndMouse::*, WindowsAndMessaging::*},
 };
-// use std::str::Split;
-// use serde_json::from_str;
-// use std::{ env, fs::{self, DirEntry, File, FileType},  io::{self, Read, Write}, path::Path, process::{ Output }, str };
-use std::{
-    env,
-    fs::{self, read_to_string, DirEntry, File, FileType},
-    io::{self, Read, Write},
-    path::Path,
-    process::Output,
-    str::Split,
-};
-// use windows::Win32::UI::Input::KeyboardAndMouse::{*};
-// use windows::Win32::{Foundation::*, Graphics::Gdi::{DISPLAY_DEVICEW, HMONITOR}, System::LibraryLoader::*, UI::{Input::KeyboardAndMouse::{ VkKeyScanW, GMMP_USE_DISPLAY_POINTS, VK_LBUTTON, VK_RBUTTON}, WindowsAndMessaging::*}};
-// use windows::core::{ s };
-// use windows::Win32::UI::Input::KeyboardAndMouse::*;
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -81,47 +74,30 @@ struct GraphUserDetails {
 struct GraphToken {
     access_token: String,
 }
-#[derive(Serialize, Deserialize)]
-struct KeyVault {
-    value: String,
-    id: String,
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<String> = env::args().collect();
+    let args: Vec<String> = args().collect();
     let mut _current_system_time: SYSTEMTIME = SYSTEMTIME {
         ..Default::default()
     };
     unsafe {
         _current_system_time = GetLocalTime();
     }
-    let log_file_path = format!(
+    let log_file_path:String = format!(
         "Log File {}-{}-{}.txt",
         check_for_length_time_and_date(_current_system_time.wDay),
         check_for_length_time_and_date(_current_system_time.wMonth),
         _current_system_time.wYear
     );
     let mut _log_file: Result<File, io::Error> = File::open(&log_file_path);
-
-    // match _log_file {
-    //     Ok(mut v)=> {
-    //         let initial_log_u8 = format!("[{}:{}:{}]: Starting Log\nLoading: {}",_current_system_time.wHour,_current_system_time.wMinute,_current_system_time.wSecond,args[1].trim()).as_bytes().as_ptr();
-    //         let _ = v.write_all(initial_log_u8.try_into());
-    //     },
-    //     Err(e) => {
-    //         println!("ERROR: {}", e)
-    //     }
-    // };
-
     // let graph_token: GraphToken = get_token().await?;
     let mut keys_buffer: String = String::new();
     // std::thread::sleep(std::time::Duration::from_millis(500));
     // let graph_user: GraphUserDetails = get_user_details_graph(graph_token.access_token).await?;
     // println!("{:?}", graph_user);
-    let mut keys_file: File = File::open(format!(".\\{name}.json", name = "keys")).unwrap();
+    let _ = File::open(".\\keys.json").unwrap().read_to_string(&mut keys_buffer);
     // println!("{:?}", response.access_token);
-    let _ = keys_file.read_to_string(&mut keys_buffer);
+    // let _ = keys_file.read_to_string(&mut keys_buffer);
     // let directory_files: Result<Output, std::io::Error> = execute_command("cmd", &["/C", "dir /b /a-d"]);
 
     let keys_json: Keys = serde_json::from_str(&keys_buffer).expect("Unable to get data");
@@ -135,8 +111,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // let mut file_name: String = String::new();
     // let _ = io::stdin().read_line(&mut file_name);
     // let mut file:File = File::open(format!(".\\marcos\\{name}.json", name=file_name.trim())).unwrap();
-    let mut file: File =
-        File::open(format!(".\\marcos\\{name}.json", name = args[1].trim())).unwrap();
+    let mut buffer: String = String::new();
+    let _ = File::open(format!(".\\marcos\\{name}.json", name = &args[1].trim())).unwrap().read_to_string(&mut buffer);
+    let data: Macro = serde_json::from_str(&buffer).expect("Not found");
+    let app: Vec<App> = data.app;
     let log_date: String = format!(
         "{}-{}-{}\n",
         check_for_length_time_and_date(_current_system_time.wDay),
@@ -146,7 +124,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match _log_file {
         Err(e) => {
-            let mut buffer_data: String = "".to_owned();
+            let mut buffer_data: String = String::new();
             let _ = File::create(&log_file_path);
             let _ = buffer_data.push_str(format!("Using file: {}.json", &args[1]).as_str());
             fs::write(format!(".\\{}", &log_file_path), log_date.replace("-", "/")).expect("Error");
@@ -159,37 +137,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         &log_file_path,
         format!("Using file: {}.json", &args[1]).as_str(),
     );
-    let mut buffer: String = String::new();
-    let _ = file.read_to_string(&mut buffer);
-    let data: Macro = serde_json::from_str(&buffer).expect("Not found");
+    // let _ = file.read_to_string(&mut buffer);
     // println!("{:?}",&buffer);
 
-    let app: Vec<App> = data.app;
     let mut loops = data.r#loop;
     // let virtual_keys_vec:Vec<u16> = vec![0x5B,0x90,0x91,0x14];
     let mut hold_keys_vector_steps: Vec<Steps> = Vec::new();
     // let mut hold_keys_vector:Vec<u16> = Vec::new();
-    let _virtual_keys_vector: Vec<u16> = Vec::new();
-    let mut _program: String = "".to_owned();
+    // let _virtual_keys_vector: Vec<u16> = Vec::new();
+    let mut _program: String = String::new();
     let mut website: bool = false;
     let continue_app: bool = true;
     let mut csv_lines:Vec<&str> = vec![];
     let mut _read_csv_file:bool = false;
     let mut buffer_csv_lines:String = String::new();
-    if !data.read_csv.is_empty() {
+    
+    if !&data.read_csv.is_empty() {
         _read_csv_file = true;
         let mut lines_to_read: io::BufReader<File> = std::io::BufReader::new(File::open(data.read_csv)?);
         let _ = &lines_to_read.read_to_string(&mut buffer_csv_lines);
         // let _ = &buffer_csv_lines.split("\r\n").into_iter().for_each(|line| println!("{}", line));
-        let _ = &buffer_csv_lines.split("\r\n").into_iter().for_each(|line| csv_lines.push(line));
-        update_log_file(&log_file_path,format!("Number of loops updated from {} to {}", data.r#loop, &buffer_csv_lines.split("\r\n").clone().count()).as_str());
         loops = buffer_csv_lines.split("\r\n").clone().count();
+        csv_lines = buffer_csv_lines.split("\r\n").collect();
+        update_log_file(&log_file_path,format!("Number of loops updated from {} to {}", data.r#loop, &loops).as_str());
     }
     // println!("{}", log_date);
     if !continue_app {
         std::process::exit(0x000)
     }
-    if !data.hotkey.is_empty() {
+    if !&data.hotkey.is_empty() {
         // println!("{:?}", data.hotkey.split(','));
         // let split_comma_count = data.hotkey.split(',').count();
         let mut hot_keys: Vec<i32> = vec![];
@@ -197,14 +173,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             hot_keys.push(word.trim().parse::<i32>().expect("Error"));
             // println!("{:?}", &word.trim().parse::<u8>().expect("Error"));
         }
-        let mut key_one: bool = get_key_state(hot_keys[0]);
-        let mut key_two: bool = get_key_state(hot_keys[1]);
         // println!("keys: {:?},{}, {:?},{}",hot_keys[0], key_one, hot_keys[1], key_two);
-        while !key_one || !key_two {
-            key_one = get_key_state(hot_keys[0]);
-            key_two = get_key_state(hot_keys[1]);
+        while !get_key_state(hot_keys[0]) || !get_key_state(hot_keys[1]) {
             // println!("keys: {:?},{}, {:?},{}",hot_keys[0], key_one, hot_keys[1], key_two);
-            if key_one && key_two {
+            if get_key_state(hot_keys[0]) && get_key_state(hot_keys[1]) {
                 update_log_file(
                     &log_file_path,
                     format!("Hot Keys Pressed: {}, {}", hot_keys[0], hot_keys[1]).as_str(),
@@ -229,9 +201,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             //     &["/C", "start C:/Users/adnan.ghafoor/Downloads/webscraper.exe payroll 1"],
             // );
             _program = app.app_value.to_owned();
-            for step in app.steps.into_iter() {
-                hold_keys_vector_steps.push(step);
-            }
+            let _ = app.steps.into_iter().for_each(|step| hold_keys_vector_steps.push(step));
         } else {
             if app.website_open {
                 _program = app.app_value.to_owned();
@@ -247,26 +217,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     format!("Opening Website: {}", &app.app_value).as_str(),
                 );
                 unsafe {
-                    let mut _current_window: HWND = GetForegroundWindow();
-                    let _ = SetActiveWindow(_current_window);
+                    let _ = SetActiveWindow(GetForegroundWindow());
                 }
-                for step in app.steps.into_iter() {
-                    hold_keys_vector_steps.push(step);
-                }
+                let _ = app.steps.into_iter().for_each(|step| hold_keys_vector_steps.push(step));
+                
                 std::thread::sleep(std::time::Duration::from_millis(500));
             } else {
                 if !String::eq(&app.app_value, "app") {
                     _program = app.app_value.to_owned();
-                    let file_to_open: String = format!("{}.exe", &app.app_value);
-                    let _ = execute_command("cmd", &["/C", "start", &file_to_open]);
+                    let _ = execute_command("cmd", &["/C", "start", format!("{}.exe", &app.app_value).as_str()]);
                 }
                 update_log_file(
                     &log_file_path,
                     format!("Opening File: {}.exe", &app.app_value).as_str(),
                 );
-                for step in app.steps.into_iter() {
-                    hold_keys_vector_steps.push(step);
-                }
+                
+                let _ = app.steps.into_iter().for_each(|step| hold_keys_vector_steps.push(step));
+                
                 std::thread::sleep(std::time::Duration::from_millis(500));
             }
         }
@@ -339,8 +306,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 );
             } else {
                 if !String::eq(&_program, "app") {
-                    let file_to_open: String = format!("{}.exe", &_program);
-                    let _ = execute_command("cmd", &["/C", "start", &file_to_open]);
+                    let _ = execute_command("cmd", &["/C", "start", format!("{}.exe", &_program).as_str()]);
                     update_log_file(
                         &log_file_path,
                         format!("Opening Website: {}.exe", &_program).as_str(),
@@ -356,7 +322,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 std::thread::sleep(std::time::Duration::from_millis(100));
                 if key.held && key.code < 800 {
                     // Key hold for keyboard
-                    println!("HOLDING KEY: {}", key.code);
                     update_log_file(
                         &log_file_path,
                         format!("Holding Key: {}", key.name).as_str(),
@@ -402,37 +367,45 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     mouse_coords[count] = word.parse::<i32>().expect("Error");
                                     count += 1
                                 }
-                                if key.code == 801 {
-                                    // Mouse button 1
-                                    update_log_file(
-                                        &log_file_path,
-                                        format!("Pressing Left Click").as_str(),
-                                    );
-                                    send_mouse_input_message(
-                                        mouse_coords[0],
-                                        mouse_coords[1],
-                                        false,
-                                        0x01,
-                                        key.held,
-                                        &log_file_path
-                                    )
-                                }
-                                if key.code == 802 {
-                                    // Mouse button 2
-                                    // send_input_messages(0x0002, false, true)
+                                match key.code {
+                                    801 => {
+                                        // Mouse button 1
+                                        update_log_file(
+                                            &log_file_path,
+                                            format!("Pressing Left Click").as_str(),
+                                        );
+                                        send_mouse_input_message(
+                                            mouse_coords[0],
+                                            mouse_coords[1],
+                                            false,
+                                            0x01,
+                                            key.held,
+                                            &log_file_path
+                                        )
+                                    },
+                                    802 => {
+                                        // Mouse button 2
+                                        // send_input_messages(0x0002, false, true)
 
-                                    update_log_file(
-                                        &log_file_path,
-                                        format!("Pressing Right Click").as_str(),
-                                    );
-                                    send_mouse_input_message(
-                                        mouse_coords[0],
-                                        mouse_coords[1],
-                                        false,
-                                        0x02,
-                                        key.held,
-                                        &log_file_path
-                                    )
+                                        update_log_file(
+                                            &log_file_path,
+                                            format!("Pressing Right Click").as_str(),
+                                        );
+                                        send_mouse_input_message(
+                                            mouse_coords[0],
+                                            mouse_coords[1],
+                                            false,
+                                            0x02,
+                                            key.held,
+                                            &log_file_path
+                                        )
+                                    },
+                                    _=> {
+                                        update_log_file(
+                                            &log_file_path,
+                                            "Failed to press click",
+                                        )
+                                    }
                                 }
                             } else {
                                 if key.code == 801 {
@@ -456,7 +429,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                         }
                         false => {
-                            if key.name.contains("move") {
+                            if key.code == 804 {
                                 let word_split = key.sentence.split(",");
                                 let mut mouse_coords: [i32; 2] = [0; 2];
                                 let mut count: usize = 0;
@@ -1223,7 +1196,7 @@ fn update_log_file(log_file_path: &str, additional_data: &str) {
         check_for_length_time_and_date(_current_system_time.wMilliseconds)
     );
     let mut _data_from_log_file: File = File::open(&log_file_path).expect("Error reading file");
-    let mut data_from_log_file: String = "".to_owned();
+    let mut data_from_log_file: String = String::new();
     let _ = _data_from_log_file.read_to_string(&mut data_from_log_file);
 
     fs::write(
