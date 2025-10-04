@@ -123,7 +123,7 @@
                 },
                 {
                     "name":"1: Payroll commands",
-                    "code": 995,
+                    "code": 994,
                     "sentence": "Notifications",
                     "held": false,
                     "time": 0,
