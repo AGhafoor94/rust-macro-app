@@ -173,11 +173,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut _program: String = "".to_owned();
     let mut website: bool = false;
     let continue_app: bool = true;
+    let mut csv_lines:Vec<&str> = vec![];
+    let mut _read_csv_file:bool = false;
     if !data.read_csv.is_empty() {
+        _read_csv_file = true;
         let mut lines_to_read: io::BufReader<File> = std::io::BufReader::new(File::open(data.read_csv)?);
         let mut buffer_csv_lines:String = String::new();
         let _ = &lines_to_read.read_to_string(&mut buffer_csv_lines);
-        let _ = &buffer_csv_lines.split("\r\n").into_iter().for_each(|line| println!("{}", line));
+        // let _ = &buffer_csv_lines.split("\r\n").into_iter().for_each(|line| println!("{}", line));
+        let _ = &buffer_csv_lines.split("\r\n").into_iter().for_each(|line| csv_lines.push(line));
         update_log_file(&log_file_path,format!("Number of loops updated from {} to {}", data.r#loop, &buffer_csv_lines.split("\r\n").clone().count()).as_str());
         loops = buffer_csv_lines.split("\r\n").clone().count();
     }
@@ -544,22 +548,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         format!("Waiting for: {} seconds", key.time).as_str(),
                     );
                     std::thread::sleep(std::time::Duration::from_secs(key.time.into()))
-                } else if key.code == 998 || key.code == 997 || key.code == 996 {
+                } else if key.code == 998 || key.code == 997 || key.code == 996 || key.code == 995 {
                     /*
                         998 = Normal sentence
                         997 = Base 64 string convert
                         996 = Get Caret Postition & JavaScript
+                        995 = Add Strings from CSV based on num in sentence
                     */
-                    update_log_file(
-                        &log_file_path,
-                        format!(
-                            "Adding sentence: \"{}\", Key Name: {}, Key Code: {}",
-                            &key.sentence, &key.name, &key.code
-                        )
-                        .as_str(),
-                    );
-                    add_sentence(&key.sentence, &key.code, &keys_json, &log_file_path);
-                } else if key.code == 995 {
+                    if key.code == 995 {
+                        if _read_csv_file {
+                            let code_to_check_csv:usize = key.sentence.trim().parse::<usize>()?;
+                            let mut csv_string_array:Vec<&str> = vec![];
+                            let _ = csv_lines[i].split(",").into_iter().for_each(|f| csv_string_array.push(f));
+                            
+                            update_log_file(
+                                &log_file_path,
+                                format!(
+                                    "Getting item in csv data: \"{}\", Sentence: {}, Key Name: {}, Key Code: {}",
+                                    csv_string_array[code_to_check_csv-1], &key.sentence, &key.name, &key.code
+                                )
+                                .as_str(),
+                            );
+                            add_sentence(csv_string_array[code_to_check_csv-1], &key.code, &keys_json, &log_file_path);
+                        }
+                    }else {
+                        update_log_file(
+                            &log_file_path,
+                            format!(
+                                "Adding sentence: \"{}\", Key Name: {}, Key Code: {}",
+                                &key.sentence, &key.name, &key.code
+                            )
+                            .as_str(),
+                        );
+                        add_sentence(&key.sentence, &key.code, &keys_json, &log_file_path);
+                    }
+                } else if key.code == 994 {
                     // Window Title
                     std::thread::sleep(std::time::Duration::from_millis(100));
 
@@ -568,7 +591,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if !result_window_title.contains(&key.sentence) {
                         send_input_messages(hold_keys_vector_steps[j - 1].code, true, true)
                     }
-                } else if key.code == 994 {
+                } else if key.code == 993 {
                     // Clipboard
                     unsafe {
                         let clipboard: Result<(), windows::core::Error> = OpenClipboard(None);
