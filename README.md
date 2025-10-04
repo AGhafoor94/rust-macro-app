@@ -14,7 +14,8 @@ Creates a log on what action is performed.
 - readCsv: Reads a CSV file given a path
 
 - app array:
-    - appValue: website url/ "app" or an exe
+    - appValue: website url/ "app" or an exe e.g. WINWORD
+        - app keyword doesn't load any exe or website
     - websiteOpen: true or false (appValue -> exe ? false)
     - steps array:
         - name: description
@@ -32,7 +33,7 @@ Creates a log on what action is performed.
         - sentence: 
             - 998: adding sentence, adds the sentence into the app or website
             - 997: Base64 string to convert back into normal string
-            - 996: Adds code e.g. sql and JavaScript
+            - 996: Adds code e.g. sql, JavaScript or any other code
             - 995: Adds csv line after split by comma by index. parses sentence as usize (int) for index position
         - loop: how many times this object is used
         - time: mainly for Delay in seconds

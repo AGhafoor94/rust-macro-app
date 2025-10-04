@@ -169,10 +169,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // println!("{:?}", data.hotkey.split(','));
         // let split_comma_count = data.hotkey.split(',').count();
         let mut hot_keys: Vec<i32> = vec![];
-        for word in data.hotkey.split(',').into_iter() {
-            hot_keys.push(word.trim().parse::<i32>().expect("Error"));
-            // println!("{:?}", &word.trim().parse::<u8>().expect("Error"));
-        }
+        let _ = &data.hotkey.split(",").into_iter().for_each(|key| hot_keys.push(key.trim().parse::<i32>().expect("Error parsing to i32")));
+        // for word in data.hotkey.split(',').into_iter() {
+        //     hot_keys.push(word.trim().parse::<i32>().expect("Error"));
+        //     // println!("{:?}", &word.trim().parse::<u8>().expect("Error"));
+        // }
+        println!("Waiting for hot keys...");
         // println!("keys: {:?},{}, {:?},{}",hot_keys[0], key_one, hot_keys[1], key_two);
         while !get_key_state(hot_keys[0]) || !get_key_state(hot_keys[1]) {
             // println!("keys: {:?},{}, {:?},{}",hot_keys[0], key_one, hot_keys[1], key_two);
@@ -195,7 +197,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
             .as_str(),
         );
-        if String::eq(&app.app_value, "app") {
+        if String::eq(&app.app_value, "app") || app.app_value.is_empty() {
             // let _ = execute_command(
             //     "cmd",
             //     &["/C", "start C:/Users/adnan.ghafoor/Downloads/webscraper.exe payroll 1"],
@@ -223,7 +225,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 
                 std::thread::sleep(std::time::Duration::from_millis(500));
             } else {
-                if !String::eq(&app.app_value, "app") {
+                if !String::eq(&app.app_value, "app") || app.app_value.is_empty() {
                     _program = app.app_value.to_owned();
                     let _ = execute_command("cmd", &["/C", "start", format!("{}.exe", &app.app_value).as_str()]);
                 }
