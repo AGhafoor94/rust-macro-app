@@ -23,6 +23,11 @@ Creates a log on what action is performed.
             - 987 = Command (runs command in sentence property that can be run in cmd)
             - everything else are key presses
         - held: if the key is held e.g. for alt + tab. Alt is held and tab is not held
-        - sentence: (code has to be 998), adding sentence, adds the sentence into the app or website
+            - Key has to be added again to release the key with held set to false
+        - sentence: 
+            - 998: adding sentence, adds the sentence into the app or website
+            - 997: Base64 string to convert back into normal string
+            - 996: Adds code e.g. sql and JavaScript
+            - 995: Adds csv line after split by comma by index. parses sentence as usize (int) for index position
         - loop: how many times this object is used
         - time: mainly for Delay in seconds

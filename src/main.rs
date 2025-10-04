@@ -558,18 +558,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if key.code == 995 {
                         if _read_csv_file {
                             let code_to_check_csv:usize = key.sentence.trim().parse::<usize>()?;
-                            let mut csv_string_array:Vec<&str> = vec![];
-                            let _ = csv_lines[i].split(",").into_iter().for_each(|f| csv_string_array.push(f));
+                            let _csv_string_array:Vec<&str> = csv_lines[i].split(",").collect();
+                            // let mut _csv_string_array:Vec<&str> = vec![];
+                            /*
+                                {
+                                    "name":"Sentence",
+                                    "code": 995,
+                                    "sentence": "1",
+                                    "held": false,
+                                    "time": 0,
+                                    "loop": 1
+                                }
+
+                                potentially works. parses sentence as index of csv line
+                            */
                             
                             update_log_file(
                                 &log_file_path,
                                 format!(
                                     "Getting item in csv data: \"{}\", Sentence: {}, Key Name: {}, Key Code: {}",
-                                    csv_string_array[code_to_check_csv-1], &key.sentence, &key.name, &key.code
+                                    _csv_string_array[code_to_check_csv-1], &key.sentence, &key.name, &key.code
                                 )
                                 .as_str(),
                             );
-                            add_sentence(csv_string_array[code_to_check_csv-1], &key.code, &keys_json, &log_file_path);
+                            add_sentence(_csv_string_array[code_to_check_csv-1], &key.code, &keys_json, &log_file_path);
                         }
                     }else {
                         update_log_file(
