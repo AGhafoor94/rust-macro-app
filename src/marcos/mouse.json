@@ -20,7 +20,7 @@
                 {
                     "name":"Mouse move",
                     "code": 804,
-                    "sentence": "1725,1845",
+                    "sentence": "1625,1645",
                     "held": false,
                     "time": 0,
                     "loop": 1
@@ -39,7 +39,7 @@
                     "sentence": "",
                     "held": false,
                     "time": 0,
-                    "loop": 1
+                    "loop": 3
                 },
                 {
                     "name":"Wait key",
@@ -71,6 +71,14 @@
                     "sentence": "",
                     "held": false,
                     "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait key",
+                    "code": 999,
+                    "sentence": "",
+                    "held": false,
+                    "time": 2,
                     "loop": 1
                 },
                 {

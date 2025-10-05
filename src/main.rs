@@ -140,7 +140,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // let _ = file.read_to_string(&mut buffer);
     // println!("{:?}",&buffer);
 
-    let mut loops = data.r#loop;
+    let mut loops:usize = data.r#loop;
     // let virtual_keys_vec:Vec<u16> = vec![0x5B,0x90,0x91,0x14];
     let mut hold_keys_vector_steps: Vec<Steps> = Vec::new();
     // let mut hold_keys_vector:Vec<u16> = Vec::new();
@@ -154,12 +154,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     if !&data.read_csv.is_empty() {
         _read_csv_file = true;
-        let mut lines_to_read: io::BufReader<File> = std::io::BufReader::new(File::open(data.read_csv)?);
+        let mut lines_to_read: io::BufReader<File> = std::io::BufReader::new(File::open(&data.read_csv)?);
         let _ = &lines_to_read.read_to_string(&mut buffer_csv_lines);
         // let _ = &buffer_csv_lines.split("\r\n").into_iter().for_each(|line| println!("{}", line));
         loops = buffer_csv_lines.split("\r\n").clone().count();
         csv_lines = buffer_csv_lines.split("\r\n").collect();
-        update_log_file(&log_file_path,format!("Number of loops updated from {} to {}", data.r#loop, &loops).as_str());
+        update_log_file(&log_file_path,format!("Number of loops updated from {} to {}", &data.r#loop, &loops).as_str());
     }
     // println!("{}", log_date);
     if !continue_app {
@@ -198,22 +198,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .as_str(),
         );
         if String::eq(&app.app_value, "app") || app.app_value.is_empty() {
-            // let _ = execute_command(
-            //     "cmd",
-            //     &["/C", "start C:/Users/adnan.ghafoor/Downloads/webscraper.exe payroll 1"],
-            // );
             _program = app.app_value.to_owned();
             let _ = app.steps.into_iter().for_each(|step| hold_keys_vector_steps.push(step));
+            std::thread::sleep(std::time::Duration::from_millis(250));
         } else {
             if app.website_open {
                 _program = app.app_value.to_owned();
                 website = true;
-                // let website_to_open = &app[0].app_value;
-                // let _ = execute_command("cmd", &["/C", "start msedge --new-window -incognito", &app.app_value]);
                 let _ = execute_command(
                     "cmd",
                     &["/C", "start msedge --new-window -incognito", &app.app_value],
                 );
+
                 update_log_file(
                     &log_file_path,
                     format!("Opening Website: {}", &app.app_value).as_str(),
@@ -225,10 +221,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 
                 std::thread::sleep(std::time::Duration::from_millis(500));
             } else {
-                if !String::eq(&app.app_value, "app") || app.app_value.is_empty() {
-                    _program = app.app_value.to_owned();
-                    let _ = execute_command("cmd", &["/C", "start", format!("{}.exe", &app.app_value).as_str()]);
-                }
+                _program = app.app_value.to_owned();
+                let _ = execute_command("cmd", &["/C", "start", format!("{}.exe", &app.app_value).as_str()]);
+               
                 update_log_file(
                     &log_file_path,
                     format!("Opening File: {}.exe", &app.app_value).as_str(),
@@ -238,18 +233,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 
                 std::thread::sleep(std::time::Duration::from_millis(500));
             }
+            std::thread::sleep(std::time::Duration::from_millis(1250));
         }
     }
-    // virtual_keys_vector.iter().for_each(|x| {
-    //     println!("{:?}", &x);
-    // });
-
-    // get mouse coords, get screen resolution and then divide to get that
-    // screen res on json?
-
-    // let mut focus_rect: RECT = RECT {
-    //     ..Default::default()
-    // };
     let mut _current_window: HWND = HWND {
         ..Default::default()
     };
@@ -257,7 +243,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         _current_window = GetForegroundWindow();
         let _ = SetFocus(_current_window);
     }
-    std::thread::sleep(std::time::Duration::from_millis(1250));
     let mut _result_window_text: String =
         get_current_window_heading_text(&log_file_path, _current_window);
     std::thread::sleep(std::time::Duration::from_millis(500));
@@ -330,168 +315,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 } else if key.code > 800 && key.code < 850 {
                     // Mouse events
-                    match key.held {
-                        true => {
-                            if !String::is_empty(&key.sentence) {
-                                update_log_file(
-                                    &log_file_path,
-                                    format!("Typing in sentence: \"{}\"", &key.sentence).as_str(),
-                                );
-                                let word_split = key.sentence.split(",");
-                                let mut mouse_coords: [i32; 2] = [0; 2];
-                                let mut count: usize = 0;
-                                for word in word_split {
-                                    // println!("{:?}", &word);
-                                    mouse_coords[count] = word.parse::<i32>().expect("Error");
-                                    count += 1
-                                }
-                                match key.code {
-                                    801 => {
-                                        // Mouse button 1
-                                        update_log_file(
-                                            &log_file_path,
-                                            format!("Pressing Left Click").as_str(),
-                                        );
-                                        send_mouse_input_message(
-                                            mouse_coords[0],
-                                            mouse_coords[1],
-                                            false,
-                                            0x01,
-                                            key.held,
-                                            &log_file_path
-                                        )
-                                    },
-                                    802 => {
-                                        // Mouse button 2
-                                        // send_input_messages(0x0002, false, true)
-
-                                        update_log_file(
-                                            &log_file_path,
-                                            format!("Pressing Right Click").as_str(),
-                                        );
-                                        send_mouse_input_message(
-                                            mouse_coords[0],
-                                            mouse_coords[1],
-                                            false,
-                                            0x02,
-                                            key.held,
-                                            &log_file_path
-                                        )
-                                    },
-                                    _=> {
-                                        update_log_file(
-                                            &log_file_path,
-                                            "Failed to press click",
-                                        )
-                                    }
-                                }
-                            } else {
-                                if key.code == 801 {
-                                    update_log_file(
-                                        &log_file_path,
-                                        format!("Pressing Left Click").as_str(),
-                                    );
-                                    send_mouse_input_message(0, 0, false, 0x01, key.held,
-                                    &log_file_path)
-                                }
-                                if key.code == 802 {
-                                    // send_input_messages(0x0002, false, true)
-
-                                    update_log_file(
-                                        &log_file_path,
-                                        format!("Pressing Right Click").as_str(),
-                                    );
-                                    send_mouse_input_message(0, 0, false, 0x02, key.held,
-                                    &log_file_path)
-                                }
-                            }
-                        }
-                        false => {
-                            if key.code == 804 {
-                                let word_split = key.sentence.split(",");
-                                let mut mouse_coords: [i32; 2] = [0; 2];
-                                let mut count: usize = 0;
-                                for word in word_split {
-                                    // println!("{:?}", &word);
-                                    mouse_coords[count] = word.parse::<i32>().expect("Error");
-                                    count += 1
-                                }
-                                update_log_file(
-                                    &log_file_path,
-                                    format!(
-                                        "Moving mouse to: {}:{}. Key Held: {}",
-                                        mouse_coords[0], mouse_coords[1], key.held
-                                    )
-                                    .as_str(),
-                                );
-                                send_mouse_input_message(
-                                    mouse_coords[0],
-                                    mouse_coords[1],
-                                    true,
-                                    0,
-                                    key.held,
-                                    &log_file_path
-                                )
-                            }
-                            std::thread::sleep(std::time::Duration::from_millis(100));
-                            if key.code == 801 {
-                                if key.sentence != "" {
-                                    let word_split: Split<'_, &'static str> =
-                                        key.sentence.split(",");
-                                    let mut mouse_coords: [i32; 2] = [0; 2];
-                                    let mut count = 0;
-                                    for word in word_split {
-                                        // println!("{:?}", &word);
-                                        mouse_coords[count] = word.parse::<i32>().expect("Error");
-                                        count += 1
-                                    }
-                                    update_log_file(
-                                        &log_file_path,
-                                        format!(
-                                            "Left Click: {}:{}. Key Held: {}: Looping: {}",
-                                            mouse_coords[0], mouse_coords[1], key.held, key.r#loop
-                                        )
-                                        .as_str(),
-                                    );
-                                    if key.r#loop > 1 {
-                                        for j in 0..key.r#loop {
-                                            println!("MOUSE CLICK: {}", j);
-                                            send_mouse_input_message(
-                                                mouse_coords[0],
-                                                mouse_coords[1],
-                                                false,
-                                                0x01,
-                                                key.held,
-                                                &log_file_path
-                                            )
-                                        }
-                                    } else {
-                                        update_log_file(
-                                            &log_file_path,
-                                            format!("Left Click. Key Held: {}: ", key.held)
-                                                .as_str(),
-                                        );
-                                        send_mouse_input_message(0, 0, false, 0x01, key.held,&log_file_path)
-                                    }
-                                } else {
-                                    update_log_file(
-                                        &log_file_path,
-                                        format!("Left Click. Key Held: {}: ", key.held).as_str(),
-                                    );
-                                    send_mouse_input_message(0, 0, false, 0x01, key.held,&log_file_path)
-                                }
-
-                                // send_input_messages(XBUTTON1, true, true)
-                            }
-                            if key.code == 802 {
-                                update_log_file(
-                                    &log_file_path,
-                                    format!("Right Click. Key Held: {}: ", key.held).as_str(),
-                                );
-                                send_mouse_input_message(0, 0, false, 0x02, key.held,&log_file_path)
-                            }
-                        }
-                    }
+                    mouse_input(key,&log_file_path);
                 } else if key.code == 999 {
                     // Wait
                     update_log_file(
@@ -587,10 +411,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .as_str(),
         );
         std::thread::sleep(std::time::Duration::from_millis(100));
-        // let mut keyboard_state_vec: [u8; 256] = [0; 256];
-        // _current_window = GetForegroundWindow();
-        // keyboard_state_vec.iter_mut().for_each(|f| *f = 0);
-        // get_mouse_events();
         update_log_file(&log_file_path, "Ended Macro\n\n");
     }
     Ok(())
@@ -807,30 +627,7 @@ fn send_input_messages(virtual_key_num: u16, release_key: bool, individial_press
     
 }
 fn execute_command(exe: &str, args: &[&str]) -> Result<Output, std::io::Error> {
-    // let command:Output = Command::new(exe).args(&*args).output().expect("Can't run");
     std::process::Command::new(exe).args(&*args).output()
-}
-fn get_mouse_events() {
-    const _MOUSE_MOVE_POINT_STRUCT_CONST: MOUSEMOVEPOINT = MOUSEMOVEPOINT {
-        x: 0 & 0x0000FFFF,
-        y: 0 & 0x0000FFFF,
-        time: 64,
-        dwExtraInfo: 0x01,
-    };
-    let _mouse_move_point_struct: MOUSEMOVEPOINT = MOUSEMOVEPOINT {
-        x: 0 & 0x0000FFFF,
-        y: 0 & 0x0000FFFF,
-        time: 64,
-        dwExtraInfo: 0x01,
-    };
-    unsafe {
-        let _ = GetMouseMovePointsEx(
-            core::mem::size_of::<MOUSEMOVEPOINT>() as u32,
-            &_MOUSE_MOVE_POINT_STRUCT_CONST,
-            &mut [_mouse_move_point_struct],
-            GMMP_USE_DISPLAY_POINTS,
-        );
-    }
 }
 fn send_mouse_input_message(x: i32, y: i32, move_mouse: bool, mouse_button: u16, held: bool, log_file_path: &str) {
     let mut point_struct: POINT = POINT {
@@ -1199,4 +996,57 @@ fn get_current_window_heading_text(log_file_path: &str, current_window: HWND) ->
         format!("Current Window Text: {}", result_window_text).as_str(),
     );
     result_window_text
+}
+fn mouse_input(key:&Steps, log_file_path: &str) { 
+    // std::thread::sleep(std::time::Duration::from_millis(100));
+    match &key.code {
+        801 => {
+            update_log_file(
+                &log_file_path,
+                format!("Mouse Left Click, Key Code: {}", &key.code).as_str(),
+            );
+            send_mouse_input_message(
+                0,
+                0,
+                false,
+                0x01,
+                key.held,
+                &log_file_path
+            )
+        },
+        802 => {
+            update_log_file(
+                &log_file_path,
+                format!("Mouse Right Click, Key Code: {}", &key.code).as_str(),
+            );
+            send_mouse_input_message(
+                0,
+                0,
+                false,
+                0x02,
+                key.held,
+                &log_file_path
+            )
+        }
+        804 => {
+            if !String::is_empty(&key.sentence){
+                std::thread::sleep(std::time::Duration::from_millis(100));
+                let mouse_coords = &key.sentence.split(",").collect::<Vec<&str>>();
+                update_log_file(
+                    &log_file_path,
+                    format!("Mouse Movement Coords: \"{}\", Key Code: {}", &key.sentence, &key.code).as_str(),
+                );
+                send_mouse_input_message(
+                    mouse_coords[0].parse::<i32>().expect("Failed to parse - Coords 0"),
+                    mouse_coords[1].parse::<i32>().expect("Failed to parse - Coords 1"),
+                    true,
+                    0,
+                    key.held,
+                    &log_file_path
+                )
+            }
+        },
+        _ => return
+    }
+    // std::thread::sleep(std::time::Duration::from_millis(100));
 }
