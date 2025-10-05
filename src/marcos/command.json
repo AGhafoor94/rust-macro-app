@@ -2,7 +2,7 @@
     "appName": "notepad",
     "loop": 1,
     "readCsv": "",
-    "hotkey": "",
+    "hotkey": "162,72",
     "description":"",
     "app": [
         {
@@ -20,7 +20,7 @@
                 {
                     "name":"Command",
                     "code": 987,
-                    "sentence": "cd C:\\Users\\adnan.ghafoor\\Downloads && dir/O:-D /b *.jnlp*",
+                    "sentence": "cd C:\\Users\\adnan\\Downloads && dir/O:-D /b *.pdf*",
                     "held": false,
                     "time": 0,
                     "loop": 1

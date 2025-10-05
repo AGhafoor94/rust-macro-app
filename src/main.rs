@@ -254,30 +254,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
     unsafe {
-        // let mut _current_window: HWND = GetForegroundWindow();
-        // let _ = SetActiveWindow(_current_window);
         _current_window = GetForegroundWindow();
         let _ = SetFocus(_current_window);
-        // let client_rect: RECT = RECT {
-        //     left: 0,
-        //     top: 0,
-        //     right: 800,
-        //     bottom: 800
-        // };
     }
     std::thread::sleep(std::time::Duration::from_millis(1250));
     let mut _result_window_text: String =
         get_current_window_heading_text(&log_file_path, _current_window);
     std::thread::sleep(std::time::Duration::from_millis(500));
-    // println!("HANDLE WINDOW: {:?}", _current_window);
     // let _ = SetForegroundWindow(_current_window);
-    // let _ = SetActiveWindow(_current_window);
-    // let _ = GetWindowRect(_current_window, &mut focus_rect);
-    // let _ = SetCursorPos(focus_rect.left, focus_rect.top);
-    // println!("Focus Rect: {}, {}", focus_rect.left, focus_rect.top);
-    // get_mouse_events();
     if _result_window_text.to_lowercase().contains("login") {}
-    // let mut holding_keys_to_release: Vec<u16> = Vec::new();
+    
     let _mouse_movements: Vec<Steps> = Vec::new();
     for i in 0..loops {
 
@@ -342,9 +328,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         Ok(o) => {
                             let string_match =
                                 str::from_utf8(&o.stdout).expect("Can't").split("\n");
-                            if str::contains(&key.sentence, ".jnlp")
-                                || str::contains(&key.sentence, ".exe")
-                            {
+                                update_log_file(&log_file_path,format!("Command Output: {:?}", str::from_utf8(&o.stdout)).as_str());
+                            if str::contains(&key.sentence, ".exe") {
                                 for j in string_match {
                                     println!("{:?}", &j);
                                 }
