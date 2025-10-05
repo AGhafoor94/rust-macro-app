@@ -126,6 +126,11 @@
     { "name": "}", "windows": 0, "ascii": 125, "shift": true },
     { "name": "~", "windows": 0, "ascii": 126, "shift": false },
     {"name": "Sentence","windows":998,"ascii": 0, "shift": false },
-    {"name": "Sentence Pass","windows":997,"ascii": 0, "shift": false }
+    {"name": "Sentence Pass","windows":997,"ascii": 0, "shift": false },
+    {"name": "Command","windows":987,"ascii": 0, "shift": false },
+    {"name": "Add Code","windows":996,"ascii": 0, "shift": false },
+    {"name": "CSV data","windows":995,"ascii": 0, "shift": false },
+    {"name": "Get Window Title","windows":994,"ascii": 0, "shift": false },
+    {"name": "Clipboard","windows":993,"ascii": 0, "shift": false }
   ]
 }
