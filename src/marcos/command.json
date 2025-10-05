@@ -24,6 +24,22 @@
                     "held": false,
                     "time": 0,
                     "loop": 1
+                },
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 1,
+                    "loop": 1
+                },
+                {
+                    "name":"Command",
+                    "code": 987,
+                    "sentence": "ipconfig /all",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
                 }
             ]
         }

