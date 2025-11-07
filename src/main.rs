@@ -3,8 +3,7 @@ use std::{
     fs::{self, DirEntry, File, FileType},
     io::{self, Read},
     path::Path,
-    process::Output,
-    str::Split,
+    process::Output
 };
 use serde::{Deserialize, Serialize};
 use base64::Engine;
@@ -17,7 +16,7 @@ use windows::Win32::{
     Foundation::*,
     System::{
         DataExchange::{CloseClipboard, GetClipboardData, OpenClipboard, SetClipboardData},
-        Shutdown::LockWorkStation,
+        Shutdown::{LockWorkStation, InitiateShutdownA,SHUTDOWN_FORCE_OTHERS,SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED},
         SystemInformation::GetLocalTime,
     },
     UI::{Input::KeyboardAndMouse::*, WindowsAndMessaging::*},
@@ -31,6 +30,8 @@ struct Macro {
     r#loop: usize,
     hotkey: String,
     read_csv: String,
+    word_delay: u64,
+    delay_for_each_loop:u64
 }
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -46,7 +47,7 @@ struct Steps {
     code: u16,
     held: bool,
     sentence: String,
-    time: u16,
+    time: u64,
     r#loop: u8,
 }
 #[derive(Serialize, Deserialize)]
@@ -76,6 +77,7 @@ struct GraphToken {
 }
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+
     let args: Vec<String> = args().collect();
     let mut _current_system_time: SYSTEMTIME = SYSTEMTIME {
         ..Default::default()
@@ -108,10 +110,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //     Ok(v) => println!("{:?}", v),
     //     _ => println!("Error"),
     // };
-    // let mut file_name: String = String::new();
-    // let _ = io::stdin().read_line(&mut file_name);
-    // let mut file:File = File::open(format!(".\\marcos\\{name}.json", name=file_name.trim())).unwrap();
     let mut buffer: String = String::new();
+    /*
+        let mut file_name: String = String::new();
+        let _ = io::stdin().read_line(&mut file_name);
+        let _ = File::open(format!(".\\marcos\\{name}.json", name=file_name.trim())).unwrap().read_to_string(&mut buffer);
+    */
     let _ = File::open(format!(".\\marcos\\{name}.json", name = &args[1].trim())).unwrap().read_to_string(&mut buffer);
     let data: Macro = serde_json::from_str(&buffer).expect("Not found");
     let app: Vec<App> = data.app;
@@ -126,7 +130,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(e) => {
             let mut buffer_data: String = String::new();
             let _ = File::create(&log_file_path);
-            let _ = buffer_data.push_str(format!("Using file: {}.json", &args[1]).as_str());
+            let _ = buffer_data.push_str(format!("Using file: {}.json", &args[1].trim()).as_str());
+            // let _ = buffer_data.push_str(format!("Using file: {}.json", &file_name.trim()).as_str());
             fs::write(format!(".\\{}", &log_file_path), log_date.replace("-", "/")).expect("Error");
             update_log_file(&log_file_path,format!("File didn't exist. Created log file: {}", e).as_str())
         }
@@ -135,7 +140,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     update_log_file(
         &log_file_path,
-        format!("Using file: {}.json", &args[1]).as_str(),
+        format!("Using file: {}.json", &args[1].trim()).as_str(),
+        // format!("Using file: {}.json", &file_name.trim()).as_str(),
     );
     // let _ = file.read_to_string(&mut buffer);
     // println!("{:?}",&buffer);
@@ -154,11 +160,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     if !&data.read_csv.is_empty() {
         _read_csv_file = true;
-        let mut lines_to_read: io::BufReader<File> = std::io::BufReader::new(File::open(&data.read_csv)?);
-        let _ = &lines_to_read.read_to_string(&mut buffer_csv_lines);
+        let csv_file:Result<File, io::Error> = File::open(&data.read_csv);
+        match csv_file {
+            Ok(v) => {
+                
+                let mut lines_to_read: io::BufReader<File> = std::io::BufReader::new(v);
+                let _ = &lines_to_read.read_to_string(&mut buffer_csv_lines);
+            },
+            Err(e) => {
+                update_log_file(
+                    &log_file_path,
+                    format!("Error trying to read csv file ({}): {}", &data.read_csv, e).as_str(),
+                );
+                return Ok(())
+            }
+        }
         // let _ = &buffer_csv_lines.split("\r\n").into_iter().for_each(|line| println!("{}", line));
         loops = buffer_csv_lines.split("\r\n").clone().count();
         csv_lines = buffer_csv_lines.split("\r\n").collect();
+        // let _ = csv_lines.remove(0);
         update_log_file(&log_file_path,format!("Number of loops updated from {} to {}", &data.r#loop, &loops).as_str());
     }
     // println!("{}", log_date);
@@ -168,13 +188,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if !&data.hotkey.is_empty() {
         // println!("{:?}", data.hotkey.split(','));
         // let split_comma_count = data.hotkey.split(',').count();
+        println!("Waiting for hot keys...");
         let mut hot_keys: Vec<i32> = vec![];
         let _ = &data.hotkey.split(",").into_iter().for_each(|key| hot_keys.push(key.trim().parse::<i32>().expect("Error parsing to i32")));
         // for word in data.hotkey.split(',').into_iter() {
         //     hot_keys.push(word.trim().parse::<i32>().expect("Error"));
         //     // println!("{:?}", &word.trim().parse::<u8>().expect("Error"));
         // }
-        println!("Waiting for hot keys...");
         // println!("keys: {:?},{}, {:?},{}",hot_keys[0], key_one, hot_keys[1], key_two);
         while !get_key_state(hot_keys[0]) || !get_key_state(hot_keys[1]) {
             // println!("keys: {:?},{}, {:?},{}",hot_keys[0], key_one, hot_keys[1], key_two);
@@ -187,6 +207,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
+    
     for app in app.into_iter() {
         update_log_file(
             &log_file_path,
@@ -219,7 +240,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 let _ = app.steps.into_iter().for_each(|step| hold_keys_vector_steps.push(step));
                 
-                std::thread::sleep(std::time::Duration::from_millis(500));
             } else {
                 _program = app.app_value.to_owned();
                 let _ = execute_command("cmd", &["/C", "start", format!("{}.exe", &app.app_value).as_str()]);
@@ -231,7 +251,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 
                 let _ = app.steps.into_iter().for_each(|step| hold_keys_vector_steps.push(step));
                 
-                std::thread::sleep(std::time::Duration::from_millis(500));
             }
             std::thread::sleep(std::time::Duration::from_millis(1250));
         }
@@ -252,16 +271,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _mouse_movements: Vec<Steps> = Vec::new();
     for i in 0..loops {
 
-        // if _current_system_time.wHour == 15 && _current_system_time.wMinute > 0 {
-        //     let _ = LockWorkStation();
-        //     std::process::exit(0x000)
-        // }
+        if _current_system_time.wHour == 13 && _current_system_time.wMinute >= 30 {
+            unsafe {
+                // let _ = LockWorkStation();
+                // let _ = InitiateSystemShutdownA(None,None,0,true, false);
+                let _ = InitiateShutdownA(None,None,0,SHUTDOWN_FORCE_OTHERS|SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED);
+            }
+            std::process::exit(0x000)
+        }
+        if get_key_state(162) && get_key_state(91) {
+            std::process::exit(0x000)
+        }
+        unsafe {
+            _current_system_time = GetLocalTime();
+        }
         update_log_file(
             &log_file_path,
             format!(
-                "Starting Current Loop Iteration: {} of {}",
+                "Starting Current Loop Iteration: {} of {}. TIME STARTED: {}:{}:{}",
                 (i + 1),
-                loops
+                loops,
+                _current_system_time.wMinute,
+                _current_system_time.wSecond,
+                _current_system_time.wMilliseconds
             )
             .as_str(),
         );
@@ -289,10 +321,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
+        let mut _current_csv_index:usize = 0;
         for (j, key) in hold_keys_vector_steps.iter().enumerate() {
             for _ in 0..key.r#loop {
                 // println!("{}", j);
-                std::thread::sleep(std::time::Duration::from_millis(100));
+                // std::thread::sleep(std::time::Duration::from_millis(1));
                 if key.held && key.code < 800 {
                     // Key hold for keyboard
                     update_log_file(
@@ -322,7 +355,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         &log_file_path,
                         format!("Waiting for: {} seconds", key.time).as_str(),
                     );
-                    std::thread::sleep(std::time::Duration::from_secs(key.time.into()))
+                    std::thread::sleep(std::time::Duration::from_millis(key.time.into()))
                 } else if key.code == 998 || key.code == 997 || key.code == 996 || key.code == 995 {
                     /*
                         998 = Normal sentence
@@ -332,8 +365,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     */
                     if key.code == 995 {
                         if _read_csv_file {
-                            let code_to_check_csv:usize = key.sentence.trim().parse::<usize>()?;
+                            if i == csv_lines.iter().count() {
+                                return Ok(())
+                            }
                             let _csv_string_array:Vec<&str> = csv_lines[i].split(",").collect();
+                            // let _ = _csv_string_array.remove(0);
+                            let code_to_check_csv:usize = _csv_string_array.iter().count();
+
                             // let mut _csv_string_array:Vec<&str> = vec![];
                             /*
                                 {
@@ -347,31 +385,50 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                                 potentially works. parses sentence as index of csv line
                             */
-                            
+                            if _csv_string_array.iter().count() == 1 {
+                                return Ok(())
+                            }else {
+                                println!("Code to check CSV: {:?}, current index {}, csv lines count: {}",_csv_string_array, i, csv_lines.iter().count());
+                                update_log_file(
+                                    &log_file_path,
+                                    format!(
+                                        "Getting item in csv data: \"{}\", Sentence: {}, Key Name: {}, Key Code: {}",
+                                        _csv_string_array[_current_csv_index], &key.sentence, &key.name, &key.code
+                                    )
+                                    .as_str(),
+                                );
+                                add_sentence(_csv_string_array[_current_csv_index], &key.code, &keys_json, &log_file_path, data.word_delay);
+                                if code_to_check_csv == _current_csv_index {
+                                    _current_csv_index = 0;
+                                }else {
+                                    _current_csv_index += 1;
+                                }
+                            }
+                        }
+                    }else {
+                        if key.code != 997 {
                             update_log_file(
                                 &log_file_path,
                                 format!(
-                                    "Getting item in csv data: \"{}\", Sentence: {}, Key Name: {}, Key Code: {}",
-                                    _csv_string_array[code_to_check_csv-1], &key.sentence, &key.name, &key.code
+                                    "Adding sentence: \"{}\", Key Name: {}, Key Code: {}",
+                                    &key.sentence, &key.name, &key.code
                                 )
                                 .as_str(),
                             );
-                            add_sentence(_csv_string_array[code_to_check_csv-1], &key.code, &keys_json, &log_file_path);
+                        }else {
+                            update_log_file(
+                                &log_file_path,
+                                format!(
+                                    "Adding sentence, Key Name: {}, Key Code: {}", &key.name, &key.code
+                                )
+                                .as_str(),
+                            );
                         }
-                    }else {
-                        update_log_file(
-                            &log_file_path,
-                            format!(
-                                "Adding sentence: \"{}\", Key Name: {}, Key Code: {}",
-                                &key.sentence, &key.name, &key.code
-                            )
-                            .as_str(),
-                        );
-                        add_sentence(&key.sentence, &key.code, &keys_json, &log_file_path);
+                        add_sentence(&key.sentence, &key.code, &keys_json, &log_file_path, data.word_delay);
                     }
                 } else if key.code == 994 {
                     // Window Title
-                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    // std::thread::sleep(std::time::Duration::from_millis(10));
 
                     let result_window_title: String =
                         get_current_window_heading_text(&log_file_path, _current_window);
@@ -401,23 +458,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
+        
+        unsafe {
+            _current_system_time = GetLocalTime();
+        }
         update_log_file(
             &log_file_path,
             format!(
-                "Ended Current Loop Iteration: {} of {}\n",
+                "Ended Current Loop Iteration: {} of {}. TIME ENDED THIS LOOP: {}:{}:{}\n",
                 (i + 1),
-                loops
+                loops,
+                _current_system_time.wMinute,
+                _current_system_time.wSecond,
+                _current_system_time.wMilliseconds
             )
             .as_str(),
         );
-        std::thread::sleep(std::time::Duration::from_millis(100));
-        update_log_file(&log_file_path, "Ended Macro\n\n");
+        std::thread::sleep(std::time::Duration::from_millis(data.delay_for_each_loop));
     }
+    update_log_file(&log_file_path, "Ended Macro\n\n");
     Ok(())
     // std::process::exit(0x000)
 }
 fn send_input_messages_from_i16(virtual_key_num: i16, release_key: bool, individial_press: bool) {
-    let get_key_state_int = virtual_key_num as u16;
+    let get_key_state_int:u16 = virtual_key_num as u16;
 
     let input_zero: INPUT_0 = INPUT_0 {
         ki: KEYBDINPUT {
@@ -468,7 +532,7 @@ fn send_input_messages_from_i16(virtual_key_num: i16, release_key: bool, individ
             }
         }
 }
-fn send_multi_input_messages_from_i16(virtual_key_num: i16, virtual_key_num_two: i16) {
+fn send_multi_input_messages_from_i16(virtual_key_num: i16, virtual_key_num_two: i16, delay:u64) {
     let get_key_state_int = virtual_key_num as u16;
     let get_key_state_int_key_two = virtual_key_num_two as u16;
     let input_zero: INPUT_0 = INPUT_0 {
@@ -530,7 +594,7 @@ fn send_multi_input_messages_from_i16(virtual_key_num: i16, virtual_key_num_two:
             &[input_struct_key_two],
             core::mem::size_of::<INPUT>() as i32,
         );
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        std::thread::sleep(std::time::Duration::from_millis(delay));
         let _ = SendInput(
             &[input_release_struct],
             core::mem::size_of::<INPUT>() as i32,
@@ -745,7 +809,7 @@ fn send_mouse_input_message(x: i32, y: i32, move_mouse: bool, mouse_button: u16,
     unsafe {
         let _ = SendInput(&[_input_mouse_struct], core::mem::size_of::<INPUT>() as i32);
     }
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        std::thread::sleep(std::time::Duration::from_millis(25));
         match held {
             true => update_log_file(log_file_path,"Mouse button held"),
             false => match move_mouse {
@@ -855,7 +919,7 @@ fn copy_all_files_in_directory(
     }
     Ok(())
 }
-fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &str) {
+fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &str, delay: u64) {
     let mut _sentence_pass: Vec<u8> = vec![0];
 
     if *code == 997 {
@@ -873,30 +937,30 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
         // println!("{}, {}",first_char, second_char);
         _u16_total_key = first_char.parse::<u16>().unwrap();
         _u16_total_key = _u16_total_key * 16;
-        _u16_total_key = match &second_char as &str {
-            "A" => _u16_total_key + 10,
-            "B" => _u16_total_key + 11,
-            "C" => _u16_total_key + 12,
-            "D" => _u16_total_key + 13,
-            "E" => _u16_total_key + 14,
-            "F" => _u16_total_key + 15,
-            _ => _u16_total_key + second_char.parse::<u16>().unwrap(),
-        };
-        // if second_char == "A" {
-        //     _u16_total_key = _u16_total_key + 10;
-        // }else if second_char == "B" {
-        //     _u16_total_key = _u16_total_key + 11;
-        // }else if second_char == "C" {
-        //     _u16_total_key = _u16_total_key + 12;
-        // }else if second_char == "D" {
-        //     _u16_total_key = _u16_total_key + 13;
-        // }else if second_char == "E" {
-        //     _u16_total_key = _u16_total_key + 14;
-        // }else if second_char == "F" {
-        //     _u16_total_key = _u16_total_key + 15;
-        // }else {
-        //     _u16_total_key = _u16_total_key + second_char.parse::<u16>().unwrap()
-        // }
+        // _u16_total_key = match &second_char as &str {
+        //     "A" => _u16_total_key + 10,
+        //     "B" => _u16_total_key + 11,
+        //     "C" => _u16_total_key + 12,
+        //     "D" => _u16_total_key + 13,
+        //     "E" => _u16_total_key + 14,
+        //     "F" => _u16_total_key + 15,
+        //     _ => _u16_total_key + second_char.parse::<u16>().unwrap(),
+        // };
+        if second_char == "A" || second_char == "a" {
+            _u16_total_key = _u16_total_key + 10;
+        }else if second_char == "B" || second_char == "b" {
+            _u16_total_key = _u16_total_key + 11;
+        }else if second_char == "C" || second_char == "c"  {
+            _u16_total_key = _u16_total_key + 12;
+        }else if second_char == "D" || second_char == "d" {
+            _u16_total_key = _u16_total_key + 13;
+        }else if second_char == "E" || second_char == "e" {
+            _u16_total_key = _u16_total_key + 14;
+        }else if second_char == "F" || second_char == "f" {
+            _u16_total_key = _u16_total_key + 15;
+        }else {
+            _u16_total_key = _u16_total_key + second_char.parse::<u16>().unwrap()
+        }
         let find_key: Option<&KeyCodesCsv> =
             keys_json.keys.iter().find(|f| &f.ascii == &_u16_total_key);
         let mut key_from_json: u16 = 0;
@@ -918,19 +982,19 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
                 // let mut shift_key_state:i16 = GetKeyState(20);
 
                 if hold_shift {
-                    send_multi_input_messages_from_i16(16, key_json)
+                    send_multi_input_messages_from_i16(16, key_json, delay)
                 } else {
                     send_input_messages(20, true, true);
-                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    // std::thread::sleep(std::time::Duration::from_millis(22));
                     send_input_messages_from_i16(key_json, true, true);
                     // shift_key_state = GetKeyState(20);
-                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    std::thread::sleep(std::time::Duration::from_millis(delay));
                     // println!("SHIFT STATE SHOULD BE 1 part 2: {:?}", shift_key_state);
                     send_input_messages(20, true, true)
                 }
             } else {
                 if hold_shift {
-                    send_multi_input_messages_from_i16(16, key_json)
+                    send_multi_input_messages_from_i16(16, key_json, delay)
                 } else {
                     send_input_messages_from_i16(key_json, true, true)
                 }
@@ -941,7 +1005,7 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
 }
 fn get_key_state(key_code: i32) -> bool {
     unsafe {
-        let key_state = GetAsyncKeyState(key_code);
+        let key_state:i16 = GetAsyncKeyState(key_code);
         if key_state != 0 {
             true
         } else {
@@ -985,7 +1049,7 @@ fn get_current_window_heading_text(log_file_path: &str, current_window: HWND) ->
     unsafe {
         let _ = GetWindowTextA(current_window, &mut _window_text);
     }
-    std::thread::sleep(std::time::Duration::from_millis(500));
+    std::thread::sleep(std::time::Duration::from_millis(5));
 
     let mut result_window_text: String =
         String::from_utf8(_window_text).expect("Unable to export to string");
@@ -1030,7 +1094,7 @@ fn mouse_input(key:&Steps, log_file_path: &str) {
         }
         804 => {
             if !String::is_empty(&key.sentence){
-                std::thread::sleep(std::time::Duration::from_millis(100));
+                std::thread::sleep(std::time::Duration::from_millis(10));
                 let mouse_coords = &key.sentence.split(",").collect::<Vec<&str>>();
                 update_log_file(
                     &log_file_path,
