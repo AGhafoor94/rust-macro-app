@@ -16,10 +16,7 @@ use windows::Win32::{
     Foundation::*,
     System::{
         DataExchange::{CloseClipboard, GetClipboardData, OpenClipboard, SetClipboardData},
-        Shutdown::{
-            InitiateShutdownA, LockWorkStation, SHTDN_REASON_FLAG_PLANNED, SHUTDOWN_FORCE_OTHERS,
-            SHUTDOWN_GRACE_OVERRIDE,
-        },
+        Shutdown::LockWorkStation,
         SystemInformation::GetLocalTime,
     },
     UI::{Input::KeyboardAndMouse::*, WindowsAndMessaging::*},
@@ -251,10 +248,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 //     "cmd",
                 //     &["/C", "start msedge --new-window -incognito", &app.app_value],
                 // );
-                let _ = execute_command(
-                    "cmd",
-                    &["/C", "start msedge --new-window -inprivate", &app.app_value],
-                );
+                // let _ = execute_command(
+                //     "cmd",
+                //     &["/C", "start msedge --new-window -inprivate", &app.app_value],
+                // );
+                let _ =
+                    execute_command("cmd", &["/C", "start msedge --new-window", &app.app_value]);
 
                 update_log_file(
                     &log_file_path,
@@ -293,9 +292,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     unsafe {
         _current_window = GetForegroundWindow();
         let _ = SetFocus(_current_window);
+        let _ = SetActiveWindow(_current_window);
+        // PostMessage(_current_window, WM_SYSCOMMAND, SC_RESTORE, 0);
     }
-    let mut _result_window_text: String =
-        get_current_window_heading_text(&log_file_path, _current_window);
+    let mut _result_window_text: String = get_current_window_heading_text(&log_file_path);
     std::thread::sleep(std::time::Duration::from_millis(500));
     // let _ = SetForegroundWindow(_current_window);
     if _result_window_text.to_lowercase().contains("login") {}
@@ -350,12 +350,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 //     "cmd",
                 //     &["/C", "start msedge --new-window -incognito", &_program],
                 // );
-                let _ = execute_command(
-                    "cmd",
-                    &["/C", "start msedge --new-window -inprivate", &_program],
-                );
-                _result_window_text =
-                    get_current_window_heading_text(&log_file_path, _current_window);
+                // let _ = execute_command(
+                //     "cmd",
+                //     &["/C", "start msedge --new-window -inprivate", &_program],
+                // );
+                let _ = execute_command("cmd", &["/C", "start msedge --new-window", &_program]);
+                _result_window_text = get_current_window_heading_text(&log_file_path);
                 update_log_file(
                     &log_file_path,
                     format!("Opening Website: {}", &_program).as_str(),
@@ -370,16 +370,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         &log_file_path,
                         format!("Opening Website: {}.exe", &_program).as_str(),
                     );
-                    _result_window_text =
-                        get_current_window_heading_text(&log_file_path, _current_window);
+                    _result_window_text = get_current_window_heading_text(&log_file_path);
                 }
             }
         }
         let mut _current_csv_index: usize = 0;
-        for (j, key) in hold_keys_vector_steps.iter().enumerate() {
+        for (_, key) in hold_keys_vector_steps.iter().enumerate() {
             for _ in 0..key.r#loop {
                 // println!("{}", j);
                 // std::thread::sleep(std::time::Duration::from_millis(1));
+                let result_window_title_main: String =
+                    get_current_window_heading_text(&log_file_path);
+
+                println!("RESULT MAIN: {:?}", result_window_title_main);
+
                 if key.held && key.code < 800 {
                     // Key hold for keyboard
                     update_log_file(
@@ -396,6 +400,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     );
                     let output: Result<Output, io::Error> =
                         execute_command("cmd", &["/C", &key.sentence]);
+                    println!("{:?}", output);
                     match output {
                         Ok(o) => update_log_file(
                             &log_file_path,
@@ -506,76 +511,114 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         );
                     }
                 } else if key.code == 994 {
-                    // Window Title
-                    // std::thread::sleep(std::time::Duration::from_millis(10));
+                    if key.name.contains("Check") {
+                        println!("CHECK CONDITION");
+                        loop {
+                            let get_current_window_text_for_loop: String =
+                                get_current_window_heading_text(&log_file_path);
+                            if get_current_window_text_for_loop.contains(key.sentence.as_str()) {
+                                println!("CURRENT WINDOW: {}", get_current_window_text_for_loop);
+                                break;
+                            }
+                            println!("SLEEPING: {}", get_current_window_text_for_loop);
+                            std::thread::sleep(std::time::Duration::from_millis(500));
+                        }
+                    } else if key.name.contains("Skip")
+                        && key.name.contains(result_window_title_main.as_str())
+                    {
+                        println!("HIT HERE {}", result_window_title_main.as_str());
+                        let sentence_key_split_new_line: Vec<&str> =
+                            key.sentence.split("\n").collect();
+                        let key_code_in_sentence: usize =
+                            sentence_key_split_new_line.iter().count();
+                        let mut keys_loop_press_vec: Vec<u16> = vec![];
+                        for key in 0..key_code_in_sentence {
+                            let strings_keys_split_by_hyphen: Vec<&str> =
+                                sentence_key_split_new_line[key].split("-").collect();
 
-                    let result_window_title: String =
-                        get_current_window_heading_text(&log_file_path, _current_window);
-                    // if result_window_title.contains("Log") {
-                    //     println!("LOGIN: {}", result_window_title);
-                    //     send_input_messages(162, false, true);
-                    //     send_input_messages(160, false, true);
-                    //     send_input_messages(74, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, true, true);
-                    //     send_input_messages(160, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     add_sentence(
-                    //         &key.sentence,
-                    //         &key.code,
-                    //         &keys_json,
-                    //         &log_file_path,
-                    //         data.word_delay,
-                    //     );
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(13, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, false, true);
-                    //     send_input_messages(160, false, true);
-                    //     send_input_messages(74, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, true, true);
-                    //     send_input_messages(160, true, true);
-                    // } else if !result_window_title.contains(&key.name)
-                    //     && !result_window_title.contains("log")
-                    // {
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, false, true);
-                    //     send_input_messages(160, false, true);
-                    //     send_input_messages(74, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, true, true);
-                    //     send_input_messages(160, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     result_window_title =
-                    //         get_current_window_heading_text(&log_file_path, _current_window);
-                    //     send_input_messages(hold_keys_vector_steps[j - 1].code, true, true);
-                    //     result_window_title =
-                    //         get_current_window_heading_text(&log_file_path, _current_window)
-                    // }
-                    send_input_messages(162, false, true);
-                    send_input_messages(160, false, true);
-                    send_input_messages(74, true, true);
-                    std::thread::sleep(std::time::Duration::from_millis(2500));
-                    send_input_messages(162, true, true);
-                    send_input_messages(160, true, true);
-                    std::thread::sleep(std::time::Duration::from_millis(2500));
-                    add_sentence(
-                        &key.sentence,
-                        &key.code,
-                        &keys_json,
-                        &log_file_path,
-                        data.word_delay,
-                    );
-                    std::thread::sleep(std::time::Duration::from_millis(2500));
-                    send_input_messages(13, true, true);
-                    std::thread::sleep(std::time::Duration::from_millis(2500));
-                    send_input_messages(162, false, true);
-                    send_input_messages(160, false, true);
-                    send_input_messages(74, true, true);
-                    std::thread::sleep(std::time::Duration::from_millis(2500));
-                    send_input_messages(162, true, true);
-                    send_input_messages(160, true, true)
+                            println!(
+                                "{}, {}",
+                                strings_keys_split_by_hyphen[0]
+                                    .trim()
+                                    .parse::<u16>()
+                                    .unwrap(),
+                                strings_keys_split_by_hyphen[1]
+                                    .trim()
+                                    .parse::<u16>()
+                                    .unwrap()
+                            );
+                            for _ in 0..strings_keys_split_by_hyphen[1]
+                                .trim()
+                                .parse::<u16>()
+                                .unwrap()
+                            {
+                                keys_loop_press_vec.push(
+                                    strings_keys_split_by_hyphen[0]
+                                        .trim()
+                                        .parse::<u16>()
+                                        .unwrap(),
+                                );
+                            }
+                        }
+                        println!("{:?}", keys_loop_press_vec);
+                        for key_in_loop_skip in keys_loop_press_vec {
+                            std::thread::sleep(std::time::Duration::from_millis(500));
+                            send_input_messages(key_in_loop_skip, true, true);
+                        }
+                    } else if key.name.contains("Log") && result_window_title_main.contains("Log") {
+                        send_input_messages(162, false, true);
+                        send_input_messages(160, false, true);
+                        send_input_messages(74, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        send_input_messages(162, true, true);
+                        send_input_messages(160, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        add_sentence(
+                            &key.sentence,
+                            &key.code,
+                            &keys_json,
+                            &log_file_path,
+                            data.word_delay,
+                        );
+                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        send_input_messages(13, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        send_input_messages(162, false, true);
+                        send_input_messages(160, false, true);
+                        send_input_messages(74, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        send_input_messages(162, true, true);
+                        send_input_messages(160, true, true)
+                    } else if key.name.contains("Log") && !result_window_title_main.contains("Log")
+                        || !result_window_title_main.contains(&key.name)
+                    {
+                        println!("Not Current Screen")
+                    } else {
+                        println!("560:- RESULT TITLE: {:?}", result_window_title_main);
+                        send_input_messages(162, false, true);
+                        send_input_messages(160, false, true);
+                        send_input_messages(74, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(162, true, true);
+                        send_input_messages(160, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        add_sentence(
+                            &key.sentence,
+                            &key.code,
+                            &keys_json,
+                            &log_file_path,
+                            data.word_delay,
+                        );
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(13, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(162, false, true);
+                        send_input_messages(160, false, true);
+                        send_input_messages(74, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(162, true, true);
+                        send_input_messages(160, true, true)
+                    }
                 } else if key.code == 993 {
                     // Clipboard
                     unsafe {
@@ -597,7 +640,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     // login exit
                     std::thread::sleep(std::time::Duration::from_millis(2500));
                     let result_window_title: String =
-                        get_current_window_heading_text(&log_file_path, _current_window);
+                        get_current_window_heading_text(&log_file_path);
                     if result_window_title.contains(&key.name) {
                         update_log_file(
                             &log_file_path,
@@ -826,7 +869,7 @@ fn send_input_messages(virtual_key_num: u16, release_key: bool, individial_press
                         core::mem::size_of::<INPUT>() as i32,
                     );
                 },
-                false => println!("Not released"),
+                false => println!(""),
             }
         }
         false => unsafe {
@@ -1207,23 +1250,37 @@ fn update_log_file(log_file_path: &str, additional_data: &str) {
     )
     .expect("Error");
 }
-fn get_current_window_heading_text(log_file_path: &str, current_window: HWND) -> String {
-    let mut _window_text: Vec<u8> = vec![0; 80];
+fn get_current_window_heading_text(log_file_path: &str) -> String {
+    let mut _window_text: Vec<u8> = vec![0; 150];
+    // let mut _window_text_u_16: Vec<u16> = vec![0; 150];
+
+    // unsafe {
+    //     let _ = SetActiveWindow(_current_window);
+    //     let _ = SetForegroundWindow(_current_window);
+    // }
     unsafe {
-        let _ = GetWindowTextA(current_window, &mut _window_text);
+        let for_ground_window: HWND = GetForegroundWindow();
+        // let _ = SetForegroundWindow(for_ground_window);
+        let _ = SetActiveWindow(for_ground_window);
+        let _ = GetWindowTextA(for_ground_window, &mut _window_text);
+        // let _ = GetWindowTextW(current_window, &mut _window_text_u_16);
     }
     std::thread::sleep(std::time::Duration::from_millis(5));
 
     let mut result_window_text: String =
         String::from_utf8(_window_text).expect("Unable to export to string");
+    // let mut result_window_text_u_16: String = String::from_utf16_lossy(&_window_text_u_16);
+    // result_window_text_u_16 = String::from(result_window_text_u_16);
+    // println!("result_window_text_u_16 {:?}", result_window_text_u_16);
     result_window_text = String::from(result_window_text.trim_matches(char::from(0)));
-    println!("Current Window Text: {}", result_window_text);
+    // println!("Current Window Text: {}", result_window_text);
     update_log_file(
         &log_file_path,
         format!("Current Window Text: {}", result_window_text).as_str(),
     );
     result_window_text
 }
+
 fn mouse_input(key: &Steps, log_file_path: &str) {
     // std::thread::sleep(std::time::Duration::from_millis(100));
     match &key.code {
