@@ -1,0 +1,241 @@
+{
+  "appName": "Open 2 Explorer Windows",
+  "loop": 1,
+  "description": "",
+  "hotkey": "162, 164",
+  "wordDelay": 10,
+  "delayForEachLoop": 1000,
+  "readCsv": "",
+  "app": [
+    {
+      "appValue": "app",
+      "websiteOpen": false,
+      "steps": [
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1500,
+          "loop": 1
+        },
+        {
+          "name": "Command",
+          "code": 987,
+          "held": false,
+          "sentence": "start %userprofile%\\Downloads",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 2000,
+          "loop": 1
+        },
+        {
+          "name": "Check",
+          "code": 994,
+          "held": false,
+          "sentence": "Downloads",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Left Windows key",
+          "code": 91,
+          "held": true,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Right key",
+          "code": 39,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 500,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 2000,
+          "loop": 1
+        },
+        {
+          "name": "ESC key",
+          "code": 27,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Command",
+          "code": 987,
+          "held": false,
+          "sentence": "start %userprofile%\\Documents",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 2000,
+          "loop": 1
+        },
+        {
+          "name": "Check",
+          "code": 994,
+          "held": false,
+          "sentence": "Documents",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Left Windows key",
+          "code": 91,
+          "held": true,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Left key",
+          "code": 37,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 500,
+          "loop": 1
+        },
+        {
+          "name": "ESC key",
+          "code": 27,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 500,
+          "loop": 1
+        },
+        {
+          "name": "Left Windows key",
+          "code": 91,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 2
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 500,
+          "loop": 1
+        },
+        {
+          "name": "Mouse move",
+          "code": 804,
+          "sentence": "1400,350",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 500,
+          "loop": 1
+        },
+        {
+          "name": "Mouse left click",
+          "code": 801,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 500,
+          "loop": 1
+        },
+        {
+          "name": "Mouse left click",
+          "code": 801,
+          "sentence": "",
+          "held": true,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 500,
+          "loop": 1
+        },
+        {
+          "name": "Mouse move",
+          "code": 804,
+          "sentence": "800,1000",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 500,
+          "loop": 1
+        },
+        {
+          "name": "Mouse left click",
+          "code": 801,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        }
+      ]
+    }
+  ]
+}
