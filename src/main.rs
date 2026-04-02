@@ -310,14 +310,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         //         // let _ = InitiateShutdownA(None,None,0,SHUTDOWN_FORCE_OTHERS|SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED);
         //     }
         // }
-        // if _current_system_time.wHour == 15 && _current_system_time.wMinute > 00 {
-        //     unsafe {
-        //         let _ = LockWorkStation();
-        //         std::process::exit(0x000)
-        //         // let _ = InitiateSystemShutdownA(None,None,0,true, false);
-        //         // let _ = InitiateShutdownA(None,None,0,SHUTDOWN_FORCE_OTHERS|SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED);
-        //     }
-        // }
+        if _current_system_time.wHour == 12 && _current_system_time.wMinute > 30 {
+            unsafe {
+                let _ = LockWorkStation();
+                std::process::exit(0x000)
+                // let _ = InitiateSystemShutdownA(None,None,0,true, false);
+                // let _ = InitiateShutdownA(None,None,0,SHUTDOWN_FORCE_OTHERS|SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED);
+            }
+        }
         // if _current_system_time.wHour == 15 && _current_system_time.wMinute == 00 {
         //     unsafe {
         //         let _ = LockWorkStation();
@@ -511,59 +511,122 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         );
                     }
                 } else if key.code == 994 {
+                    // Window Title
+                    // std::thread::sleep(std::time::Duration::from_millis(10));
+
+                    // let result_window_title: String =
+                    // get_current_window_heading_text(&log_file_path);
+                    // if result_window_title.contains("Log") {
+                    //     println!("LOGIN: {}", result_window_title);
+                    //     send_input_messages(162, false, true);
+                    //     send_input_messages(160, false, true);
+                    //     send_input_messages(74, true, true);
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
+                    //     send_input_messages(162, true, true);
+                    //     send_input_messages(160, true, true);
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
+                    //     add_sentence(
+                    //         &key.sentence,
+                    //         &key.code,
+                    //         &keys_json,
+                    //         &log_file_path,
+                    //         data.word_delay,
+                    //     );
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));BT009
+
+                    //     send_input_messages(13, true, true);
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
+                    //     send_input_messages(162, false, true);
+                    //     send_input_messages(160, false, true);
+                    //     send_input_messages(74, true, true);
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
+                    //     send_input_messages(162, true, true);
+                    //     send_input_messages(160, true, true);
+                    // } else if !result_window_title.contains(&key.name)
+                    //     && !result_window_title.contains("log")
+                    // {
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
+                    //     send_input_messages(162, false, true);
+                    //     send_input_messages(160, false, true);
+                    //     send_input_messages(74, true, true);
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
+                    //     send_input_messages(162, true, true);
+                    //     send_input_messages(160, true, true);
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
+                    //     result_window_title =
+                    //         get_current_window_heading_text(&log_file_path);
+                    //     send_input_messages(hold_keys_vector_steps[j - 1].code, true, true);
+                    //     result_window_title =
+                    //         get_current_window_heading_text(&log_file_path)
+                    // }
+                    // println!("560:- RESULT TITLE: {:?}", result_window_title);
+                    let mut get_current_window_text_for_loop: String =
+                        get_current_window_heading_text(&log_file_path);
                     if key.name.contains("Check") {
                         println!("CHECK CONDITION");
+                        update_log_file(
+                            &log_file_path,
+                            format!(
+                                "Starting Current Loop to try and find Title: {}. TIME STARTED: {}:{}:{}",
+                                key.sentence,
+                                _current_system_time.wMinute,
+                                _current_system_time.wSecond,
+                                _current_system_time.wMilliseconds
+                            )
+                            .as_str(),
+                        );
                         loop {
-                            let get_current_window_text_for_loop: String =
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            get_current_window_text_for_loop =
                                 get_current_window_heading_text(&log_file_path);
+                            println!("SLEEPING: {}", get_current_window_text_for_loop);
                             if get_current_window_text_for_loop.contains(key.sentence.as_str()) {
                                 println!("CURRENT WINDOW: {}", get_current_window_text_for_loop);
                                 break;
                             }
-                            println!("SLEEPING: {}", get_current_window_text_for_loop);
-                            std::thread::sleep(std::time::Duration::from_millis(500));
                         }
-                    } else if key.name.contains("Skip")
-                        && key.name.contains(result_window_title_main.as_str())
-                    {
-                        println!("HIT HERE {}", result_window_title_main.as_str());
-                        let sentence_key_split_new_line: Vec<&str> =
-                            key.sentence.split("\n").collect();
-                        let key_code_in_sentence: usize =
-                            sentence_key_split_new_line.iter().count();
-                        let mut keys_loop_press_vec: Vec<u16> = vec![];
-                        for key in 0..key_code_in_sentence {
-                            let strings_keys_split_by_hyphen: Vec<&str> =
-                                sentence_key_split_new_line[key].split("-").collect();
+                    } else if key.name.contains("Skip") {
+                        let split_key_name_by_hyphen: Vec<&str> = key.name.split("-").collect();
+                        if get_current_window_text_for_loop.contains(split_key_name_by_hyphen[1]) {
+                            println!("HIT HERE {}", get_current_window_text_for_loop);
+                            let sentence_key_split_new_line: Vec<&str> =
+                                key.sentence.split("\n").collect();
+                            let key_code_in_sentence: usize =
+                                sentence_key_split_new_line.iter().count();
+                            let mut keys_loop_press_vec: Vec<u16> = vec![];
+                            for key in 0..key_code_in_sentence {
+                                let strings_keys_split_by_hyphen: Vec<&str> =
+                                    sentence_key_split_new_line[key].split("-").collect();
 
-                            println!(
-                                "{}, {}",
-                                strings_keys_split_by_hyphen[0]
-                                    .trim()
-                                    .parse::<u16>()
-                                    .unwrap(),
-                                strings_keys_split_by_hyphen[1]
-                                    .trim()
-                                    .parse::<u16>()
-                                    .unwrap()
-                            );
-                            for _ in 0..strings_keys_split_by_hyphen[1]
-                                .trim()
-                                .parse::<u16>()
-                                .unwrap()
-                            {
-                                keys_loop_press_vec.push(
+                                println!(
+                                    "{}, {}",
                                     strings_keys_split_by_hyphen[0]
                                         .trim()
                                         .parse::<u16>()
                                         .unwrap(),
+                                    strings_keys_split_by_hyphen[1]
+                                        .trim()
+                                        .parse::<u16>()
+                                        .unwrap()
                                 );
+                                for _ in 0..strings_keys_split_by_hyphen[1]
+                                    .trim()
+                                    .parse::<u16>()
+                                    .unwrap()
+                                {
+                                    keys_loop_press_vec.push(
+                                        strings_keys_split_by_hyphen[0]
+                                            .trim()
+                                            .parse::<u16>()
+                                            .unwrap(),
+                                    );
+                                }
                             }
-                        }
-                        println!("{:?}", keys_loop_press_vec);
-                        for key_in_loop_skip in keys_loop_press_vec {
-                            std::thread::sleep(std::time::Duration::from_millis(500));
-                            send_input_messages(key_in_loop_skip, true, true);
+                            println!("{:?}", keys_loop_press_vec);
+                            for key_in_loop_skip in keys_loop_press_vec {
+                                std::thread::sleep(std::time::Duration::from_millis(500));
+                                send_input_messages(key_in_loop_skip, true, true);
+                            }
                         }
                     } else if key.name.contains("Log") && result_window_title_main.contains("Log") {
                         send_input_messages(162, false, true);
