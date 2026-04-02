@@ -1,0 +1,137 @@
+{
+  "appName": "Test",
+  "loop": 1250,
+  "description": "",
+  "hotkey": "",
+  "wordDelay": 5,
+  "delayForEachLoop": 1000,
+  "readCsv": "",
+  "app": [
+    {
+      "appValue": "app",
+      "websiteOpen": false,
+      "steps": [
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1500,
+          "loop": 1
+        },
+        {
+          "name": "Tab",
+          "code": 9,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 4
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1750,
+          "loop": 1
+        },
+        {
+          "name": "Mouse move",
+          "code": 804,
+          "sentence": "330,410",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Mouse left click",
+          "code": 801,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1750,
+          "loop": 1
+        },
+        {
+          "name": "Mouse move",
+          "code": 804,
+          "sentence": "480,335",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1500,
+          "loop": 1
+        },
+        {
+          "name": "Mouse move",
+          "code": 804,
+          "sentence": "520,655",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Mouse left click",
+          "code": 801,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Control Key",
+          "code": 162,
+          "held": true,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Shift Key",
+          "code": 160,
+          "held": true,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1750,
+          "loop": 1
+        },
+        {
+          "name": "Shift Key",
+          "code": 160,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1500,
+          "loop": 1
+        }
+      ]
+    }
+  ]
+}

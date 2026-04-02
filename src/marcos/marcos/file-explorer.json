@@ -1,9 +1,9 @@
 {
     "appName": "file explorer",
     "loop": 1,
-    "readCsv": "",
+    "description": "",
     "hotkey": "",
-    "description":"",
+    "readCsv": "",
     "wordDelay": 5,
     "delayForEachLoop": 10,
     "app": [

@@ -1,0 +1,89 @@
+{
+    "appName": "EFin Update From CSV",
+    "loop": 1,
+    "description": "",
+    "hotkey": "162, 74",
+    "readCsv": "C:\\Users\\adnan.ghafoor\\downloads\\imp28.csv",
+    "wordDelay": 5,
+    "delayForEachLoop": 250,
+    "app": [
+        {
+            "appValue": "app",
+            "websiteOpen": false,
+            "steps": [
+                {
+                    "name":"CSV",
+                    "code": 995,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Tab",
+                    "code": 9,
+                    "held": false,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"CSV",
+                    "code": 995,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Tab",
+                    "code": 9,
+                    "held": false,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Wait",
+                    "code": 999,
+                    "held": false,
+                    "sentence": "",
+                    "time": 25,
+                    "loop": 1
+                },
+                {
+                    "name":"Down key",
+                    "code": 40,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Shift key",
+                    "code": 160,
+                    "sentence": "",
+                    "held": true,
+                    "time": 0,
+                    "loop": 1
+                },
+                {
+                    "name":"Tab",
+                    "code": 9,
+                    "held": false,
+                    "sentence": "",
+                    "time": 0,
+                    "loop": 2
+                },
+                {
+                    "name":"Shift key",
+                    "code": 160,
+                    "sentence": "",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                }
+            ]
+        }
+    ]
+}

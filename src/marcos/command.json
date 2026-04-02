@@ -4,6 +4,8 @@
     "readCsv": "",
     "hotkey": "162,72",
     "description":"",
+    "wordDelay": 5,
+    "delayForEachLoop": 10,
     "app": [
         {
             "appValue": "app",
@@ -36,10 +38,10 @@
                 {
                     "name":"Command",
                     "code": 987,
-                    "sentence": "ipconfig /all",
+                    "sentence": "powershell.exe -command Invoke-Item C:\\users\\adnan\\downloads",
                     "held": false,
                     "time": 0,
-                    "loop": 1
+                    "loop": 3
                 }
             ]
         }

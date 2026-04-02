@@ -1,0 +1,137 @@
+{
+  "appName": "EFin Launchpad Start",
+  "loop": 1,
+  "description": "",
+  "hotkey": "",
+  "wordDelay": 10,
+  "delayForEachLoop": 1000,
+  "readCsv": "",
+  "app": [
+    {
+      "appValue": "https://adv-efin6test.elfssharedservices.co.uk:9201/launchpad/applications",
+      "websiteOpen": true,
+      "steps": [
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1500,
+          "loop": 1
+        },
+        {
+          "name": "ALT key",
+          "code": 164,
+          "held": true,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Space key",
+          "code": 32,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1500,
+          "loop": 1
+        },
+        {
+          "name": "X Key",
+          "code": 88,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "ALT key",
+          "code": 164,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 2500,
+          "loop": 1
+        },
+        {
+          "name": "Login",
+          "code": 994,
+          "held": false,
+          "sentence": "document.getElementById('username').value='aghafoor';document.getElementById('password').value='TestP@ss1';document.getElementById('kc-login').click()",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 2500,
+          "loop": 1
+        },
+        {
+          "name": "Work",
+          "code": 994,
+          "held": false,
+          "sentence": "document.getElementById('22').click()",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 2500,
+          "loop": 1
+        },
+        {
+          "name": "Sign",
+          "code": 992,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 2000,
+          "loop": 1
+        },
+        {
+          "name": "uploader",
+          "code": 994,
+          "held": false,
+          "sentence": "document.getElementById('theFile').click()",
+          "time": 0,
+          "loop": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,14 +1,13 @@
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
+use serde::{Deserialize, Serialize};
 use std::{
     env::args,
     fs::{self, DirEntry, File, FileType},
     io::{self, Read},
     path::Path,
     process::Output,
-    str::Split,
 };
-use serde::{Deserialize, Serialize};
-use base64::Engine;
-use base64::prelude::BASE64_STANDARD;
 // cargo build --release app.exe
 // #![windows_subsystem = "windows"]
 use reqwest::header::HeaderMap;
@@ -31,6 +30,8 @@ struct Macro {
     r#loop: usize,
     hotkey: String,
     read_csv: String,
+    word_delay: u64,
+    delay_for_each_loop: u64,
 }
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -46,7 +47,7 @@ struct Steps {
     code: u16,
     held: bool,
     sentence: String,
-    time: u16,
+    time: u64,
     r#loop: u8,
 }
 #[derive(Serialize, Deserialize)]
@@ -83,7 +84,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     unsafe {
         _current_system_time = GetLocalTime();
     }
-    let log_file_path:String = format!(
+    let log_file_path: String = format!(
         "Log File {}-{}-{}.txt",
         check_for_length_time_and_date(_current_system_time.wDay),
         check_for_length_time_and_date(_current_system_time.wMonth),
@@ -95,7 +96,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // std::thread::sleep(std::time::Duration::from_millis(500));
     // let graph_user: GraphUserDetails = get_user_details_graph(graph_token.access_token).await?;
     // println!("{:?}", graph_user);
-    let _ = File::open(".\\keys.json").unwrap().read_to_string(&mut keys_buffer);
+    let _ = File::open(".\\keys.json")
+        .unwrap()
+        .read_to_string(&mut keys_buffer);
     // println!("{:?}", response.access_token);
     // let _ = keys_file.read_to_string(&mut keys_buffer);
     // let directory_files: Result<Output, std::io::Error> = execute_command("cmd", &["/C", "dir /b /a-d"]);
@@ -108,11 +111,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //     Ok(v) => println!("{:?}", v),
     //     _ => println!("Error"),
     // };
-    // let mut file_name: String = String::new();
-    // let _ = io::stdin().read_line(&mut file_name);
-    // let mut file:File = File::open(format!(".\\marcos\\{name}.json", name=file_name.trim())).unwrap();
     let mut buffer: String = String::new();
-    let _ = File::open(format!(".\\marcos\\{name}.json", name = &args[1].trim())).unwrap().read_to_string(&mut buffer);
+    /*
+        let mut file_name: String = String::new();
+        let _ = io::stdin().read_line(&mut file_name);
+        let _ = File::open(format!(".\\marcos\\{name}.json", name=file_name.trim())).unwrap().read_to_string(&mut buffer);
+    */
+    let _ = File::open(format!(".\\marcos\\{name}.json", name = &args[1].trim()))
+        .unwrap()
+        .read_to_string(&mut buffer);
     let data: Macro = serde_json::from_str(&buffer).expect("Not found");
     let app: Vec<App> = data.app;
     let log_date: String = format!(
@@ -126,21 +133,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(e) => {
             let mut buffer_data: String = String::new();
             let _ = File::create(&log_file_path);
-            let _ = buffer_data.push_str(format!("Using file: {}.json", &args[1]).as_str());
+            let _ = buffer_data.push_str(format!("Using file: {}.json", &args[1].trim()).as_str());
+            // let _ = buffer_data.push_str(format!("Using file: {}.json", &file_name.trim()).as_str());
             fs::write(format!(".\\{}", &log_file_path), log_date.replace("-", "/")).expect("Error");
-            update_log_file(&log_file_path,format!("File didn't exist. Created log file: {}", e).as_str())
+            update_log_file(
+                &log_file_path,
+                format!("File didn't exist. Created log file: {}", e).as_str(),
+            )
         }
-        _ => update_log_file(&log_file_path,"Log file created")
+        _ => update_log_file(&log_file_path, "Log file created"),
     }
 
     update_log_file(
         &log_file_path,
-        format!("Using file: {}.json", &args[1]).as_str(),
+        format!("Using file: {}.json", &args[1].trim()).as_str(),
+        // format!("Using file: {}.json", &file_name.trim()).as_str(),
     );
     // let _ = file.read_to_string(&mut buffer);
     // println!("{:?}",&buffer);
 
-    let mut loops:usize = data.r#loop;
+    let mut loops: usize = data.r#loop;
     // let virtual_keys_vec:Vec<u16> = vec![0x5B,0x90,0x91,0x14];
     let mut hold_keys_vector_steps: Vec<Steps> = Vec::new();
     // let mut hold_keys_vector:Vec<u16> = Vec::new();
@@ -148,18 +160,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut _program: String = String::new();
     let mut website: bool = false;
     let continue_app: bool = true;
-    let mut csv_lines:Vec<&str> = vec![];
-    let mut _read_csv_file:bool = false;
-    let mut buffer_csv_lines:String = String::new();
-    
+    let mut csv_lines: Vec<&str> = vec![];
+    let mut _read_csv_file: bool = false;
+    let mut buffer_csv_lines: String = String::new();
+
     if !&data.read_csv.is_empty() {
         _read_csv_file = true;
-        let mut lines_to_read: io::BufReader<File> = std::io::BufReader::new(File::open(&data.read_csv)?);
-        let _ = &lines_to_read.read_to_string(&mut buffer_csv_lines);
+        let csv_file: Result<File, io::Error> = File::open(&data.read_csv);
+        match csv_file {
+            Ok(v) => {
+                let mut lines_to_read: io::BufReader<File> = std::io::BufReader::new(v);
+                let _ = &lines_to_read.read_to_string(&mut buffer_csv_lines);
+            }
+            Err(e) => {
+                update_log_file(
+                    &log_file_path,
+                    format!("Error trying to read csv file ({}): {}", &data.read_csv, e).as_str(),
+                );
+                return Ok(());
+            }
+        }
         // let _ = &buffer_csv_lines.split("\r\n").into_iter().for_each(|line| println!("{}", line));
         loops = buffer_csv_lines.split("\r\n").clone().count();
         csv_lines = buffer_csv_lines.split("\r\n").collect();
-        update_log_file(&log_file_path,format!("Number of loops updated from {} to {}", &data.r#loop, &loops).as_str());
+        // let _ = csv_lines.remove(0);
+        update_log_file(
+            &log_file_path,
+            format!(
+                "Number of loops updated from {} to {}",
+                &data.r#loop, &loops
+            )
+            .as_str(),
+        );
     }
     // println!("{}", log_date);
     if !continue_app {
@@ -168,13 +200,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if !&data.hotkey.is_empty() {
         // println!("{:?}", data.hotkey.split(','));
         // let split_comma_count = data.hotkey.split(',').count();
+        println!("Waiting for hot keys...");
         let mut hot_keys: Vec<i32> = vec![];
-        let _ = &data.hotkey.split(",").into_iter().for_each(|key| hot_keys.push(key.trim().parse::<i32>().expect("Error parsing to i32")));
+        let _ = &data.hotkey.split(",").into_iter().for_each(|key| {
+            hot_keys.push(key.trim().parse::<i32>().expect("Error parsing to i32"))
+        });
         // for word in data.hotkey.split(',').into_iter() {
         //     hot_keys.push(word.trim().parse::<i32>().expect("Error"));
         //     // println!("{:?}", &word.trim().parse::<u8>().expect("Error"));
         // }
-        println!("Waiting for hot keys...");
         // println!("keys: {:?},{}, {:?},{}",hot_keys[0], key_one, hot_keys[1], key_two);
         while !get_key_state(hot_keys[0]) || !get_key_state(hot_keys[1]) {
             // println!("keys: {:?},{}, {:?},{}",hot_keys[0], key_one, hot_keys[1], key_two);
@@ -187,6 +221,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
+
     for app in app.into_iter() {
         update_log_file(
             &log_file_path,
@@ -199,16 +234,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
         if String::eq(&app.app_value, "app") || app.app_value.is_empty() {
             _program = app.app_value.to_owned();
-            let _ = app.steps.into_iter().for_each(|step| hold_keys_vector_steps.push(step));
+            let _ = app
+                .steps
+                .into_iter()
+                .for_each(|step| hold_keys_vector_steps.push(step));
             std::thread::sleep(std::time::Duration::from_millis(250));
         } else {
             if app.website_open {
                 _program = app.app_value.to_owned();
                 website = true;
-                let _ = execute_command(
-                    "cmd",
-                    &["/C", "start msedge --new-window -incognito", &app.app_value],
-                );
+
+                // let _ = execute_command(
+                //     "cmd",
+                //     &["/C", "start msedge --new-window -incognito", &app.app_value],
+                // );
+                // let _ = execute_command(
+                //     "cmd",
+                //     &["/C", "start msedge --new-window -inprivate", &app.app_value],
+                // );
+                let _ =
+                    execute_command("cmd", &["/C", "start msedge --new-window", &app.app_value]);
 
                 update_log_file(
                     &log_file_path,
@@ -217,21 +262,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 unsafe {
                     let _ = SetActiveWindow(GetForegroundWindow());
                 }
-                let _ = app.steps.into_iter().for_each(|step| hold_keys_vector_steps.push(step));
-                
-                std::thread::sleep(std::time::Duration::from_millis(500));
+                let _ = app
+                    .steps
+                    .into_iter()
+                    .for_each(|step| hold_keys_vector_steps.push(step));
             } else {
                 _program = app.app_value.to_owned();
-                let _ = execute_command("cmd", &["/C", "start", format!("{}.exe", &app.app_value).as_str()]);
-               
+                let _ = execute_command(
+                    "cmd",
+                    &["/C", "start", format!("{}.exe", &app.app_value).as_str()],
+                );
+
                 update_log_file(
                     &log_file_path,
                     format!("Opening File: {}.exe", &app.app_value).as_str(),
                 );
-                
-                let _ = app.steps.into_iter().for_each(|step| hold_keys_vector_steps.push(step));
-                
-                std::thread::sleep(std::time::Duration::from_millis(500));
+
+                let _ = app
+                    .steps
+                    .into_iter()
+                    .for_each(|step| hold_keys_vector_steps.push(step));
             }
             std::thread::sleep(std::time::Duration::from_millis(1250));
         }
@@ -242,57 +292,98 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     unsafe {
         _current_window = GetForegroundWindow();
         let _ = SetFocus(_current_window);
+        let _ = SetActiveWindow(_current_window);
+        // PostMessage(_current_window, WM_SYSCOMMAND, SC_RESTORE, 0);
     }
-    let mut _result_window_text: String =
-        get_current_window_heading_text(&log_file_path, _current_window);
+    let mut _result_window_text: String = get_current_window_heading_text(&log_file_path);
     std::thread::sleep(std::time::Duration::from_millis(500));
     // let _ = SetForegroundWindow(_current_window);
     if _result_window_text.to_lowercase().contains("login") {}
-    
+
     let _mouse_movements: Vec<Steps> = Vec::new();
     for i in 0..loops {
-
-        // if _current_system_time.wHour == 15 && _current_system_time.wMinute > 0 {
-        //     let _ = LockWorkStation();
-        //     std::process::exit(0x000)
+        // if _current_system_time.wHour == 13 && _current_system_time.wMinute > 14 {
+        //     unsafe {
+        //         let _ = LockWorkStation();
+        //         std::process::exit(0x000)
+        //         // let _ = InitiateSystemShutdownA(None,None,0,true, false);
+        //         // let _ = InitiateShutdownA(None,None,0,SHUTDOWN_FORCE_OTHERS|SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED);
+        //     }
         // }
+        if _current_system_time.wHour == 12 && _current_system_time.wMinute > 30 {
+            unsafe {
+                let _ = LockWorkStation();
+                std::process::exit(0x000)
+                // let _ = InitiateSystemShutdownA(None,None,0,true, false);
+                // let _ = InitiateShutdownA(None,None,0,SHUTDOWN_FORCE_OTHERS|SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED);
+            }
+        }
+        // if _current_system_time.wHour == 15 && _current_system_time.wMinute == 00 {
+        //     unsafe {
+        //         let _ = LockWorkStation();
+        //         std::process::exit(0x000)
+        //         // let _ = InitiateSystemShutdownA(None,None,0,true, false);
+        //         // let _ = InitiateShutdownA(None,None,0,SHUTDOWN_FORCE_OTHERS|SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED);
+        //     }
+        // }
+        if get_key_state(162) && get_key_state(91) {
+            std::process::exit(0x000)
+        }
+        unsafe {
+            _current_system_time = GetLocalTime();
+        }
         update_log_file(
             &log_file_path,
             format!(
-                "Starting Current Loop Iteration: {} of {}",
+                "Starting Current Loop Iteration: {} of {}. TIME STARTED: {}:{}:{}",
                 (i + 1),
-                loops
+                loops,
+                _current_system_time.wMinute,
+                _current_system_time.wSecond,
+                _current_system_time.wMilliseconds
             )
             .as_str(),
         );
         if i > 0 {
             if website {
-                let _ = execute_command(
-                    "cmd",
-                    &["/C", "start msedge --new-window -incognito", &_program],
-                );
-                _result_window_text =
-                    get_current_window_heading_text(&log_file_path, _current_window);
+                // let _ = execute_command(
+                //     "cmd",
+                //     &["/C", "start msedge --new-window -incognito", &_program],
+                // );
+                // let _ = execute_command(
+                //     "cmd",
+                //     &["/C", "start msedge --new-window -inprivate", &_program],
+                // );
+                let _ = execute_command("cmd", &["/C", "start msedge --new-window", &_program]);
+                _result_window_text = get_current_window_heading_text(&log_file_path);
                 update_log_file(
                     &log_file_path,
                     format!("Opening Website: {}", &_program).as_str(),
                 );
             } else {
                 if !String::eq(&_program, "app") {
-                    let _ = execute_command("cmd", &["/C", "start", format!("{}.exe", &_program).as_str()]);
+                    let _ = execute_command(
+                        "cmd",
+                        &["/C", "start", format!("{}.exe", &_program).as_str()],
+                    );
                     update_log_file(
                         &log_file_path,
                         format!("Opening Website: {}.exe", &_program).as_str(),
                     );
-                    _result_window_text =
-                        get_current_window_heading_text(&log_file_path, _current_window);
+                    _result_window_text = get_current_window_heading_text(&log_file_path);
                 }
             }
         }
-        for (j, key) in hold_keys_vector_steps.iter().enumerate() {
+        let mut _current_csv_index: usize = 0;
+        for (_, key) in hold_keys_vector_steps.iter().enumerate() {
             for _ in 0..key.r#loop {
                 // println!("{}", j);
-                std::thread::sleep(std::time::Duration::from_millis(100));
+                // std::thread::sleep(std::time::Duration::from_millis(1));
+                let result_window_title_main: String =
+                    get_current_window_heading_text(&log_file_path);
+
+                println!("RESULT MAIN: {:?}", result_window_title_main);
+
                 if key.held && key.code < 800 {
                     // Key hold for keyboard
                     update_log_file(
@@ -309,20 +400,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     );
                     let output: Result<Output, io::Error> =
                         execute_command("cmd", &["/C", &key.sentence]);
+                    println!("{:?}", output);
                     match output {
-                        Ok(o) => update_log_file(&log_file_path,format!("Command Output: {:?}. Command Status: {}", str::from_utf8(&o.stdout),&o.status).as_str()),
-                        Err(e) => update_log_file(&log_file_path,format!("Error Running Command: {}, Sentence: {}", e, &key.sentence).as_str()),
+                        Ok(o) => update_log_file(
+                            &log_file_path,
+                            format!(
+                                "Command Output: {:?}. Command Status: {}",
+                                str::from_utf8(&o.stdout),
+                                &o.status
+                            )
+                            .as_str(),
+                        ),
+                        Err(e) => update_log_file(
+                            &log_file_path,
+                            format!("Error Running Command: {}, Sentence: {}", e, &key.sentence)
+                                .as_str(),
+                        ),
                     }
                 } else if key.code > 800 && key.code < 850 {
                     // Mouse events
-                    mouse_input(key,&log_file_path);
+                    mouse_input(key, &log_file_path);
                 } else if key.code == 999 {
                     // Wait
                     update_log_file(
                         &log_file_path,
                         format!("Waiting for: {} seconds", key.time).as_str(),
                     );
-                    std::thread::sleep(std::time::Duration::from_secs(key.time.into()))
+                    std::thread::sleep(std::time::Duration::from_millis(key.time.into()))
                 } else if key.code == 998 || key.code == 997 || key.code == 996 || key.code == 995 {
                     /*
                         998 = Normal sentence
@@ -332,8 +436,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     */
                     if key.code == 995 {
                         if _read_csv_file {
-                            let code_to_check_csv:usize = key.sentence.trim().parse::<usize>()?;
-                            let _csv_string_array:Vec<&str> = csv_lines[i].split(",").collect();
+                            if i == csv_lines.iter().count() {
+                                return Ok(());
+                            }
+                            let _csv_string_array: Vec<&str> = csv_lines[i].split(",").collect();
+                            // let _ = _csv_string_array.remove(0);
+                            let code_to_check_csv: usize = _csv_string_array.iter().count();
+
                             // let mut _csv_string_array:Vec<&str> = vec![];
                             /*
                                 {
@@ -347,43 +456,241 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                                 potentially works. parses sentence as index of csv line
                             */
-                            
+                            if _csv_string_array.iter().count() == 1 {
+                                return Ok(());
+                            } else {
+                                println!("Code to check CSV: {:?}, current index {}, csv lines count: {}",_csv_string_array, i, csv_lines.iter().count());
+                                update_log_file(
+                                    &log_file_path,
+                                    format!(
+                                        "Getting item in csv data: \"{}\", Sentence: {}, Key Name: {}, Key Code: {}",
+                                        _csv_string_array[_current_csv_index], &key.sentence, &key.name, &key.code
+                                    )
+                                    .as_str(),
+                                );
+                                add_sentence(
+                                    _csv_string_array[_current_csv_index],
+                                    &key.code,
+                                    &keys_json,
+                                    &log_file_path,
+                                    data.word_delay,
+                                );
+                                if code_to_check_csv == _current_csv_index {
+                                    _current_csv_index = 0;
+                                } else {
+                                    _current_csv_index += 1;
+                                }
+                            }
+                        }
+                    } else {
+                        if key.code != 997 {
                             update_log_file(
                                 &log_file_path,
                                 format!(
-                                    "Getting item in csv data: \"{}\", Sentence: {}, Key Name: {}, Key Code: {}",
-                                    _csv_string_array[code_to_check_csv-1], &key.sentence, &key.name, &key.code
+                                    "Adding sentence: \"{}\", Key Name: {}, Key Code: {}",
+                                    &key.sentence, &key.name, &key.code
                                 )
                                 .as_str(),
                             );
-                            add_sentence(_csv_string_array[code_to_check_csv-1], &key.code, &keys_json, &log_file_path);
+                        } else {
+                            update_log_file(
+                                &log_file_path,
+                                format!(
+                                    "Adding sentence, Key Name: {}, Key Code: {}",
+                                    &key.name, &key.code
+                                )
+                                .as_str(),
+                            );
                         }
-                    }else {
-                        update_log_file(
+                        add_sentence(
+                            &key.sentence,
+                            &key.code,
+                            &keys_json,
                             &log_file_path,
-                            format!(
-                                "Adding sentence: \"{}\", Key Name: {}, Key Code: {}",
-                                &key.sentence, &key.name, &key.code
-                            )
-                            .as_str(),
+                            data.word_delay,
                         );
-                        add_sentence(&key.sentence, &key.code, &keys_json, &log_file_path);
                     }
                 } else if key.code == 994 {
                     // Window Title
-                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    // std::thread::sleep(std::time::Duration::from_millis(10));
 
-                    let result_window_title: String =
-                        get_current_window_heading_text(&log_file_path, _current_window);
-                    if !result_window_title.contains(&key.sentence) {
-                        send_input_messages(hold_keys_vector_steps[j - 1].code, true, true)
+                    // let result_window_title: String =
+                    // get_current_window_heading_text(&log_file_path);
+                    // if result_window_title.contains("Log") {
+                    //     println!("LOGIN: {}", result_window_title);
+                    //     send_input_messages(162, false, true);
+                    //     send_input_messages(160, false, true);
+                    //     send_input_messages(74, true, true);
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
+                    //     send_input_messages(162, true, true);
+                    //     send_input_messages(160, true, true);
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
+                    //     add_sentence(
+                    //         &key.sentence,
+                    //         &key.code,
+                    //         &keys_json,
+                    //         &log_file_path,
+                    //         data.word_delay,
+                    //     );
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));BT009
+
+                    //     send_input_messages(13, true, true);
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
+                    //     send_input_messages(162, false, true);
+                    //     send_input_messages(160, false, true);
+                    //     send_input_messages(74, true, true);
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
+                    //     send_input_messages(162, true, true);
+                    //     send_input_messages(160, true, true);
+                    // } else if !result_window_title.contains(&key.name)
+                    //     && !result_window_title.contains("log")
+                    // {
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
+                    //     send_input_messages(162, false, true);
+                    //     send_input_messages(160, false, true);
+                    //     send_input_messages(74, true, true);
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
+                    //     send_input_messages(162, true, true);
+                    //     send_input_messages(160, true, true);
+                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
+                    //     result_window_title =
+                    //         get_current_window_heading_text(&log_file_path);
+                    //     send_input_messages(hold_keys_vector_steps[j - 1].code, true, true);
+                    //     result_window_title =
+                    //         get_current_window_heading_text(&log_file_path)
+                    // }
+                    // println!("560:- RESULT TITLE: {:?}", result_window_title);
+                    let mut get_current_window_text_for_loop: String =
+                        get_current_window_heading_text(&log_file_path);
+                    if key.name.contains("Check") {
+                        println!("CHECK CONDITION");
+                        update_log_file(
+                            &log_file_path,
+                            format!(
+                                "Starting Current Loop to try and find Title: {}. TIME STARTED: {}:{}:{}",
+                                key.sentence,
+                                _current_system_time.wMinute,
+                                _current_system_time.wSecond,
+                                _current_system_time.wMilliseconds
+                            )
+                            .as_str(),
+                        );
+                        loop {
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            get_current_window_text_for_loop =
+                                get_current_window_heading_text(&log_file_path);
+                            println!("SLEEPING: {}", get_current_window_text_for_loop);
+                            if get_current_window_text_for_loop.contains(key.sentence.as_str()) {
+                                println!("CURRENT WINDOW: {}", get_current_window_text_for_loop);
+                                break;
+                            }
+                        }
+                    } else if key.name.contains("Skip") {
+                        let split_key_name_by_hyphen: Vec<&str> = key.name.split("-").collect();
+                        if get_current_window_text_for_loop.contains(split_key_name_by_hyphen[1]) {
+                            println!("HIT HERE {}", get_current_window_text_for_loop);
+                            let sentence_key_split_new_line: Vec<&str> =
+                                key.sentence.split("\n").collect();
+                            let key_code_in_sentence: usize =
+                                sentence_key_split_new_line.iter().count();
+                            let mut keys_loop_press_vec: Vec<u16> = vec![];
+                            for key in 0..key_code_in_sentence {
+                                let strings_keys_split_by_hyphen: Vec<&str> =
+                                    sentence_key_split_new_line[key].split("-").collect();
+
+                                println!(
+                                    "{}, {}",
+                                    strings_keys_split_by_hyphen[0]
+                                        .trim()
+                                        .parse::<u16>()
+                                        .unwrap(),
+                                    strings_keys_split_by_hyphen[1]
+                                        .trim()
+                                        .parse::<u16>()
+                                        .unwrap()
+                                );
+                                for _ in 0..strings_keys_split_by_hyphen[1]
+                                    .trim()
+                                    .parse::<u16>()
+                                    .unwrap()
+                                {
+                                    keys_loop_press_vec.push(
+                                        strings_keys_split_by_hyphen[0]
+                                            .trim()
+                                            .parse::<u16>()
+                                            .unwrap(),
+                                    );
+                                }
+                            }
+                            println!("{:?}", keys_loop_press_vec);
+                            for key_in_loop_skip in keys_loop_press_vec {
+                                std::thread::sleep(std::time::Duration::from_millis(500));
+                                send_input_messages(key_in_loop_skip, true, true);
+                            }
+                        }
+                    } else if key.name.contains("Log") && result_window_title_main.contains("Log") {
+                        send_input_messages(162, false, true);
+                        send_input_messages(160, false, true);
+                        send_input_messages(74, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        send_input_messages(162, true, true);
+                        send_input_messages(160, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        add_sentence(
+                            &key.sentence,
+                            &key.code,
+                            &keys_json,
+                            &log_file_path,
+                            data.word_delay,
+                        );
+                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        send_input_messages(13, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        send_input_messages(162, false, true);
+                        send_input_messages(160, false, true);
+                        send_input_messages(74, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        send_input_messages(162, true, true);
+                        send_input_messages(160, true, true)
+                    } else if key.name.contains("Log") && !result_window_title_main.contains("Log")
+                        || !result_window_title_main.contains(&key.name)
+                    {
+                        println!("Not Current Screen")
+                    } else {
+                        println!("560:- RESULT TITLE: {:?}", result_window_title_main);
+                        send_input_messages(162, false, true);
+                        send_input_messages(160, false, true);
+                        send_input_messages(74, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(162, true, true);
+                        send_input_messages(160, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        add_sentence(
+                            &key.sentence,
+                            &key.code,
+                            &keys_json,
+                            &log_file_path,
+                            data.word_delay,
+                        );
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(13, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(162, false, true);
+                        send_input_messages(160, false, true);
+                        send_input_messages(74, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(162, true, true);
+                        send_input_messages(160, true, true)
                     }
                 } else if key.code == 993 {
                     // Clipboard
                     unsafe {
                         let clipboard: Result<(), windows::core::Error> = OpenClipboard(None);
                         match clipboard {
-                            Err(e) => update_log_file(&log_file_path,format!("Error opening Clipboard: {}", e).as_str()),
+                            Err(e) => update_log_file(
+                                &log_file_path,
+                                format!("Error opening Clipboard: {}", e).as_str(),
+                            ),
                             Ok(_) => {
                                 let _ = SetClipboardData(0x001, None);
                                 let clipboard_data = GetClipboardData(0x001);
@@ -391,6 +698,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 let _ = CloseClipboard();
                             }
                         }
+                    }
+                } else if key.code == 992 {
+                    // login exit
+                    std::thread::sleep(std::time::Duration::from_millis(2500));
+                    let result_window_title: String =
+                        get_current_window_heading_text(&log_file_path);
+                    if result_window_title.contains(&key.name) {
+                        update_log_file(
+                            &log_file_path,
+                            format!("On Page, exited, {}", &key.name).as_str(),
+                        );
+                        std::process::exit(0x000)
+                    } else {
+                        continue;
                     }
                 } else {
                     update_log_file(
@@ -401,23 +722,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
+
+        unsafe {
+            _current_system_time = GetLocalTime();
+        }
         update_log_file(
             &log_file_path,
             format!(
-                "Ended Current Loop Iteration: {} of {}\n",
+                "Ended Current Loop Iteration: {} of {}. TIME ENDED THIS LOOP: {}:{}:{}\n",
                 (i + 1),
-                loops
+                loops,
+                _current_system_time.wMinute,
+                _current_system_time.wSecond,
+                _current_system_time.wMilliseconds
             )
             .as_str(),
         );
-        std::thread::sleep(std::time::Duration::from_millis(100));
-        update_log_file(&log_file_path, "Ended Macro\n\n");
+        std::thread::sleep(std::time::Duration::from_millis(data.delay_for_each_loop));
     }
+    update_log_file(&log_file_path, "Ended Macro\n\n");
     Ok(())
     // std::process::exit(0x000)
 }
 fn send_input_messages_from_i16(virtual_key_num: i16, release_key: bool, individial_press: bool) {
-    let get_key_state_int = virtual_key_num as u16;
+    let get_key_state_int: u16 = virtual_key_num as u16;
 
     let input_zero: INPUT_0 = INPUT_0 {
         ki: KEYBDINPUT {
@@ -447,19 +775,8 @@ fn send_input_messages_from_i16(virtual_key_num: i16, release_key: bool, individ
     };
     // let struct_size:i32 = core::mem::size_of::<INPUT>() as i32;
     if individial_press {
-            // println!("{:?}", key_state);
-            if release_key {
-                unsafe {
-                    let _ = SendInput(
-                        &[input_release_struct],
-                        core::mem::size_of::<INPUT>() as i32,
-                    );
-                }
-            }
-            unsafe {
-                let _ = SendInput(&[input_struct], core::mem::size_of::<INPUT>() as i32);
-            }
-        } else {
+        // println!("{:?}", key_state);
+        if release_key {
             unsafe {
                 let _ = SendInput(
                     &[input_release_struct],
@@ -467,8 +784,19 @@ fn send_input_messages_from_i16(virtual_key_num: i16, release_key: bool, individ
                 );
             }
         }
+        unsafe {
+            let _ = SendInput(&[input_struct], core::mem::size_of::<INPUT>() as i32);
+        }
+    } else {
+        unsafe {
+            let _ = SendInput(
+                &[input_release_struct],
+                core::mem::size_of::<INPUT>() as i32,
+            );
+        }
+    }
 }
-fn send_multi_input_messages_from_i16(virtual_key_num: i16, virtual_key_num_two: i16) {
+fn send_multi_input_messages_from_i16(virtual_key_num: i16, virtual_key_num_two: i16, delay: u64) {
     let get_key_state_int = virtual_key_num as u16;
     let get_key_state_int_key_two = virtual_key_num_two as u16;
     let input_zero: INPUT_0 = INPUT_0 {
@@ -530,7 +858,7 @@ fn send_multi_input_messages_from_i16(virtual_key_num: i16, virtual_key_num_two:
             &[input_struct_key_two],
             core::mem::size_of::<INPUT>() as i32,
         );
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        std::thread::sleep(std::time::Duration::from_millis(delay));
         let _ = SendInput(
             &[input_release_struct],
             core::mem::size_of::<INPUT>() as i32,
@@ -589,47 +917,49 @@ fn send_input_messages(virtual_key_num: u16, release_key: bool, individial_press
     //     r#type: INPUT_TYPE(1),
     //     Anonymous: release_shift,
     // };
-        // let get_key_state_int = virtual_key_num as i32;
+    // let get_key_state_int = virtual_key_num as i32;
 
-        // let _ = GetKeyState(get_key_state_int);
-        match individial_press {
-            true => {
-                unsafe {
-                    let _ = SendInput(&[input_struct], core::mem::size_of::<INPUT>() as i32);
-                }
-                match release_key {
-                    true => {
-                        unsafe {
-                            let _ = SendInput(
-                                &[input_release_struct],
-                                core::mem::size_of::<INPUT>() as i32,
-                            );
-                        }
-                    }
-                    false => println!("Not released"),
-                }
+    // let _ = GetKeyState(get_key_state_int);
+    match individial_press {
+        true => {
+            unsafe {
+                let _ = SendInput(&[input_struct], core::mem::size_of::<INPUT>() as i32);
             }
-            false => {
-                unsafe {
+            match release_key {
+                true => unsafe {
                     let _ = SendInput(
                         &[input_release_struct],
                         core::mem::size_of::<INPUT>() as i32,
                     );
-                }
+                },
+                false => println!(""),
             }
         }
-        // let _ = SendInput(
-        //     &[input_release_shift_struct],
-        //     core::mem::size_of::<INPUT>() as i32,
-        // );
+        false => unsafe {
+            let _ = SendInput(
+                &[input_release_struct],
+                core::mem::size_of::<INPUT>() as i32,
+            );
+        },
+    }
+    // let _ = SendInput(
+    //     &[input_release_shift_struct],
+    //     core::mem::size_of::<INPUT>() as i32,
+    // );
 
-        // println!("{:?}", key_state);
-    
+    // println!("{:?}", key_state);
 }
 fn execute_command(exe: &str, args: &[&str]) -> Result<Output, std::io::Error> {
     std::process::Command::new(exe).args(&*args).output()
 }
-fn send_mouse_input_message(x: i32, y: i32, move_mouse: bool, mouse_button: u16, held: bool, log_file_path: &str) {
+fn send_mouse_input_message(
+    x: i32,
+    y: i32,
+    move_mouse: bool,
+    mouse_button: u16,
+    held: bool,
+    log_file_path: &str,
+) {
     let mut point_struct: POINT = POINT {
         ..Default::default()
     };
@@ -736,7 +1066,10 @@ fn send_mouse_input_message(x: i32, y: i32, move_mouse: bool, mouse_button: u16,
                         },
                     };
                 }
-                _ => update_log_file(log_file_path,format!("Error clicking mouse {}", mouse_button).as_str()),
+                _ => update_log_file(
+                    log_file_path,
+                    format!("Error clicking mouse {}", mouse_button).as_str(),
+                ),
             }
 
             println!("582: {:?}", point_struct);
@@ -745,56 +1078,56 @@ fn send_mouse_input_message(x: i32, y: i32, move_mouse: bool, mouse_button: u16,
     unsafe {
         let _ = SendInput(&[_input_mouse_struct], core::mem::size_of::<INPUT>() as i32);
     }
-        std::thread::sleep(std::time::Duration::from_millis(100));
-        match held {
-            true => update_log_file(log_file_path,"Mouse button held"),
-            false => match move_mouse {
-                true => {
-                    unsafe {
-                        let _ = SendInput(&[_input_mouse_struct], core::mem::size_of::<INPUT>() as i32);
-                    }
-                }
-                false => {
-                    match mouse_button {
-                        0x01 => {
-                            _input_mouse_struct = INPUT {
-                                r#type: INPUT_TYPE(0),
-                                Anonymous: INPUT_0 {
-                                    mi: MOUSEINPUT {
-                                        dx: point_struct.x,
-                                        dy: point_struct.y,
-                                        mouseData: 0x01,
-                                        dwFlags: MOUSEEVENTF_LEFTUP,
-                                        time: 0,
-                                        dwExtraInfo: Default::default(),
-                                    },
-                                },
-                            };
-                        }
-                        0x02 => {
-                            _input_mouse_struct = INPUT {
-                                r#type: INPUT_TYPE(0),
-                                Anonymous: INPUT_0 {
-                                    mi: MOUSEINPUT {
-                                        dx: point_struct.x,
-                                        dy: point_struct.y,
-                                        mouseData: 0x02,
-                                        dwFlags: MOUSEEVENTF_RIGHTUP,
-                                        time: 0,
-                                        dwExtraInfo: Default::default(),
-                                    },
-                                },
-                            };
-                        }
-                        _ => update_log_file(log_file_path,format!("Error clicking mouse {}", mouse_button).as_str()),
-                    }
-                    unsafe {
-                        let _ = SendInput(&[_input_mouse_struct], core::mem::size_of::<INPUT>() as i32);
-                    }
-                }
+    std::thread::sleep(std::time::Duration::from_millis(25));
+    match held {
+        true => update_log_file(log_file_path, "Mouse button held"),
+        false => match move_mouse {
+            true => unsafe {
+                let _ = SendInput(&[_input_mouse_struct], core::mem::size_of::<INPUT>() as i32);
             },
-        }
-    
+            false => {
+                match mouse_button {
+                    0x01 => {
+                        _input_mouse_struct = INPUT {
+                            r#type: INPUT_TYPE(0),
+                            Anonymous: INPUT_0 {
+                                mi: MOUSEINPUT {
+                                    dx: point_struct.x,
+                                    dy: point_struct.y,
+                                    mouseData: 0x01,
+                                    dwFlags: MOUSEEVENTF_LEFTUP,
+                                    time: 0,
+                                    dwExtraInfo: Default::default(),
+                                },
+                            },
+                        };
+                    }
+                    0x02 => {
+                        _input_mouse_struct = INPUT {
+                            r#type: INPUT_TYPE(0),
+                            Anonymous: INPUT_0 {
+                                mi: MOUSEINPUT {
+                                    dx: point_struct.x,
+                                    dy: point_struct.y,
+                                    mouseData: 0x02,
+                                    dwFlags: MOUSEEVENTF_RIGHTUP,
+                                    time: 0,
+                                    dwExtraInfo: Default::default(),
+                                },
+                            },
+                        };
+                    }
+                    _ => update_log_file(
+                        log_file_path,
+                        format!("Error clicking mouse {}", mouse_button).as_str(),
+                    ),
+                }
+                unsafe {
+                    let _ = SendInput(&[_input_mouse_struct], core::mem::size_of::<INPUT>() as i32);
+                }
+            }
+        },
+    }
 }
 async fn get_token() -> Result<GraphToken, Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
@@ -855,7 +1188,7 @@ fn copy_all_files_in_directory(
     }
     Ok(())
 }
-fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &str) {
+fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &str, delay: u64) {
     let mut _sentence_pass: Vec<u8> = vec![0];
 
     if *code == 997 {
@@ -873,30 +1206,30 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
         // println!("{}, {}",first_char, second_char);
         _u16_total_key = first_char.parse::<u16>().unwrap();
         _u16_total_key = _u16_total_key * 16;
-        _u16_total_key = match &second_char as &str {
-            "A" => _u16_total_key + 10,
-            "B" => _u16_total_key + 11,
-            "C" => _u16_total_key + 12,
-            "D" => _u16_total_key + 13,
-            "E" => _u16_total_key + 14,
-            "F" => _u16_total_key + 15,
-            _ => _u16_total_key + second_char.parse::<u16>().unwrap(),
-        };
-        // if second_char == "A" {
-        //     _u16_total_key = _u16_total_key + 10;
-        // }else if second_char == "B" {
-        //     _u16_total_key = _u16_total_key + 11;
-        // }else if second_char == "C" {
-        //     _u16_total_key = _u16_total_key + 12;
-        // }else if second_char == "D" {
-        //     _u16_total_key = _u16_total_key + 13;
-        // }else if second_char == "E" {
-        //     _u16_total_key = _u16_total_key + 14;
-        // }else if second_char == "F" {
-        //     _u16_total_key = _u16_total_key + 15;
-        // }else {
-        //     _u16_total_key = _u16_total_key + second_char.parse::<u16>().unwrap()
-        // }
+        // _u16_total_key = match &second_char as &str {
+        //     "A" => _u16_total_key + 10,
+        //     "B" => _u16_total_key + 11,
+        //     "C" => _u16_total_key + 12,
+        //     "D" => _u16_total_key + 13,
+        //     "E" => _u16_total_key + 14,
+        //     "F" => _u16_total_key + 15,
+        //     _ => _u16_total_key + second_char.parse::<u16>().unwrap(),
+        // };
+        if second_char == "A" || second_char == "a" {
+            _u16_total_key = _u16_total_key + 10;
+        } else if second_char == "B" || second_char == "b" {
+            _u16_total_key = _u16_total_key + 11;
+        } else if second_char == "C" || second_char == "c" {
+            _u16_total_key = _u16_total_key + 12;
+        } else if second_char == "D" || second_char == "d" {
+            _u16_total_key = _u16_total_key + 13;
+        } else if second_char == "E" || second_char == "e" {
+            _u16_total_key = _u16_total_key + 14;
+        } else if second_char == "F" || second_char == "f" {
+            _u16_total_key = _u16_total_key + 15;
+        } else {
+            _u16_total_key = _u16_total_key + second_char.parse::<u16>().unwrap()
+        }
         let find_key: Option<&KeyCodesCsv> =
             keys_json.keys.iter().find(|f| &f.ascii == &_u16_total_key);
         let mut key_from_json: u16 = 0;
@@ -909,7 +1242,7 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
                 _key_char = val.name.as_str();
                 key_from_json = val.ascii;
             }
-            None => update_log_file(log_file_path,"Can't find matching key"),
+            None => update_log_file(log_file_path, "Can't find matching key"),
         };
         // check if key is less than u16 then shift
         unsafe {
@@ -918,19 +1251,19 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
                 // let mut shift_key_state:i16 = GetKeyState(20);
 
                 if hold_shift {
-                    send_multi_input_messages_from_i16(16, key_json)
+                    send_multi_input_messages_from_i16(16, key_json, delay)
                 } else {
                     send_input_messages(20, true, true);
-                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    // std::thread::sleep(std::time::Duration::from_millis(22));
                     send_input_messages_from_i16(key_json, true, true);
                     // shift_key_state = GetKeyState(20);
-                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    std::thread::sleep(std::time::Duration::from_millis(delay));
                     // println!("SHIFT STATE SHOULD BE 1 part 2: {:?}", shift_key_state);
                     send_input_messages(20, true, true)
                 }
             } else {
                 if hold_shift {
-                    send_multi_input_messages_from_i16(16, key_json)
+                    send_multi_input_messages_from_i16(16, key_json, delay)
                 } else {
                     send_input_messages_from_i16(key_json, true, true)
                 }
@@ -941,7 +1274,7 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
 }
 fn get_key_state(key_code: i32) -> bool {
     unsafe {
-        let key_state = GetAsyncKeyState(key_code);
+        let key_state: i16 = GetAsyncKeyState(key_code);
         if key_state != 0 {
             true
         } else {
@@ -980,24 +1313,38 @@ fn update_log_file(log_file_path: &str, additional_data: &str) {
     )
     .expect("Error");
 }
-fn get_current_window_heading_text(log_file_path: &str, current_window: HWND) -> String {
-    let mut _window_text: Vec<u8> = vec![0; 80];
+fn get_current_window_heading_text(log_file_path: &str) -> String {
+    let mut _window_text: Vec<u8> = vec![0; 150];
+    // let mut _window_text_u_16: Vec<u16> = vec![0; 150];
+
+    // unsafe {
+    //     let _ = SetActiveWindow(_current_window);
+    //     let _ = SetForegroundWindow(_current_window);
+    // }
     unsafe {
-        let _ = GetWindowTextA(current_window, &mut _window_text);
+        let for_ground_window: HWND = GetForegroundWindow();
+        // let _ = SetForegroundWindow(for_ground_window);
+        let _ = SetActiveWindow(for_ground_window);
+        let _ = GetWindowTextA(for_ground_window, &mut _window_text);
+        // let _ = GetWindowTextW(current_window, &mut _window_text_u_16);
     }
-    std::thread::sleep(std::time::Duration::from_millis(500));
+    std::thread::sleep(std::time::Duration::from_millis(5));
 
     let mut result_window_text: String =
         String::from_utf8(_window_text).expect("Unable to export to string");
+    // let mut result_window_text_u_16: String = String::from_utf16_lossy(&_window_text_u_16);
+    // result_window_text_u_16 = String::from(result_window_text_u_16);
+    // println!("result_window_text_u_16 {:?}", result_window_text_u_16);
     result_window_text = String::from(result_window_text.trim_matches(char::from(0)));
-    println!("Current Window Text: {}", result_window_text);
+    // println!("Current Window Text: {}", result_window_text);
     update_log_file(
         &log_file_path,
         format!("Current Window Text: {}", result_window_text).as_str(),
     );
     result_window_text
 }
-fn mouse_input(key:&Steps, log_file_path: &str) { 
+
+fn mouse_input(key: &Steps, log_file_path: &str) {
     // std::thread::sleep(std::time::Duration::from_millis(100));
     match &key.code {
         801 => {
@@ -1005,48 +1352,42 @@ fn mouse_input(key:&Steps, log_file_path: &str) {
                 &log_file_path,
                 format!("Mouse Left Click, Key Code: {}", &key.code).as_str(),
             );
-            send_mouse_input_message(
-                0,
-                0,
-                false,
-                0x01,
-                key.held,
-                &log_file_path
-            )
-        },
+            send_mouse_input_message(0, 0, false, 0x01, key.held, &log_file_path)
+        }
         802 => {
             update_log_file(
                 &log_file_path,
                 format!("Mouse Right Click, Key Code: {}", &key.code).as_str(),
             );
-            send_mouse_input_message(
-                0,
-                0,
-                false,
-                0x02,
-                key.held,
-                &log_file_path
-            )
+            send_mouse_input_message(0, 0, false, 0x02, key.held, &log_file_path)
         }
         804 => {
-            if !String::is_empty(&key.sentence){
-                std::thread::sleep(std::time::Duration::from_millis(100));
+            if !String::is_empty(&key.sentence) {
+                std::thread::sleep(std::time::Duration::from_millis(10));
                 let mouse_coords = &key.sentence.split(",").collect::<Vec<&str>>();
                 update_log_file(
                     &log_file_path,
-                    format!("Mouse Movement Coords: \"{}\", Key Code: {}", &key.sentence, &key.code).as_str(),
+                    format!(
+                        "Mouse Movement Coords: \"{}\", Key Code: {}",
+                        &key.sentence, &key.code
+                    )
+                    .as_str(),
                 );
                 send_mouse_input_message(
-                    mouse_coords[0].parse::<i32>().expect("Failed to parse - Coords 0"),
-                    mouse_coords[1].parse::<i32>().expect("Failed to parse - Coords 1"),
+                    mouse_coords[0]
+                        .parse::<i32>()
+                        .expect("Failed to parse - Coords 0"),
+                    mouse_coords[1]
+                        .parse::<i32>()
+                        .expect("Failed to parse - Coords 1"),
                     true,
                     0,
                     key.held,
-                    &log_file_path
+                    &log_file_path,
                 )
             }
-        },
-        _ => return
+        }
+        _ => return,
     }
     // std::thread::sleep(std::time::Duration::from_millis(100));
 }

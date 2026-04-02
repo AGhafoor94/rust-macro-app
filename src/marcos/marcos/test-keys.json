@@ -1,0 +1,49 @@
+{
+  "appName": "TEST APP",
+  "loop": 1,
+  "description": "",
+  "hotkey": "",
+  "wordDelay": 10,
+  "delayForEachLoop": 1000,
+  "readCsv": "",
+  "app": [
+    {
+      "appValue": "https://google.co.uk",
+      "websiteOpen": true,
+      "steps": [
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1500,
+          "loop": 1
+        },
+        {
+          "name": "Mouse move",
+          "code": 804,
+          "sentence": "1550,260",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 13000,
+          "loop": 1
+        },
+        {
+          "name": "Skip - Java Update Needed",
+          "code": 994,
+          "held": false,
+          "sentence": "9 - 4\n13 - 1",
+          "time": 0,
+          "loop": 1
+        }
+      ]
+    }
+  ]
+}

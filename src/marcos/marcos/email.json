@@ -1,0 +1,25 @@
+{
+    "appName": "Email command",
+    "loop": 1,
+    "description": "",
+    "hotkey": "",
+    "readCsv": "",
+    "wordDelay": 1,
+    "delayForEachLoop": 85,
+    "app": [
+        {
+            "appValue": "app",
+            "websiteOpen": false,
+            "steps": [
+                {
+                    "name":"Command",
+                    "code": 987,
+                    "sentence": "powershell $sendMailMessageSplat = @{\nFrom = 'Adnan Ghafoor <adnan.ghafoor@elht.nhs.uk>'\nTo = 'Adnan Ghafoor <adnan.ghafoor@elht.nhs.uk>'\nSubject = 'Test mail'\nSmtpServer = 'smtp.adnan.ghafoor@elht.nhs.uk'\n}\nSend-MailMessage @sendMailMessageSplat",
+                    "held": false,
+                    "time": 0,
+                    "loop": 1
+                }
+            ]
+        }
+    ]
+}
