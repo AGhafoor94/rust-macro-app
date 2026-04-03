@@ -1102,16 +1102,45 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
     } else {
         _sentence_pass = sentence.as_bytes().to_vec();
     }
-
+    let length_of_sentence = _sentence_pass.len();
     _sentence_pass.into_iter().for_each(|f| {
         let mut _u16_total_key: u16 = 0;
         let mut hex_code: String = format!("{f:#X}");
+        let mut second_char: String = "".to_owned();
         hex_code = hex_code.replace("0x", "");
         let first_char: String = hex_code[..1].to_owned();
-        let second_char: String = hex_code[1..].to_owned();
+        println!(
+            "1112: HEX CODE: {}, FIRST CHAR: {}, F: {}, SENTENCE LENGTH: {}",
+            hex_code, first_char, f, length_of_sentence
+        );
+        if f < 16 {
+            _u16_total_key = f as u16;
+            // _u16_total_key = _u16_total_key * 16;
+            // std::thread::sleep(std::time::Duration::from_millis(10));
+        } else {
+            _u16_total_key = first_char.parse::<u16>().unwrap();
+            _u16_total_key = _u16_total_key * 16;
+            second_char = hex_code[1..].to_owned();
 
-        _u16_total_key = first_char.parse::<u16>().unwrap();
-        _u16_total_key = _u16_total_key * 16;
+            if second_char == "A" || second_char == "a" {
+                _u16_total_key = _u16_total_key + 10;
+            } else if second_char == "B" || second_char == "b" {
+                _u16_total_key = _u16_total_key + 11;
+            } else if second_char == "C" || second_char == "c" {
+                _u16_total_key = _u16_total_key + 12;
+            } else if second_char == "D" || second_char == "d" {
+                _u16_total_key = _u16_total_key + 13;
+            } else if second_char == "E" || second_char == "e" {
+                _u16_total_key = _u16_total_key + 14;
+            } else if second_char == "F" || second_char == "f" {
+                _u16_total_key = _u16_total_key + 15;
+            } else {
+                _u16_total_key = _u16_total_key + second_char.parse::<u16>().unwrap()
+            }
+            // std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+
+        std::thread::sleep(std::time::Duration::from_millis(20));
         // _u16_total_key = match &second_char as &str {
         //     "A" => _u16_total_key + 10,
         //     "B" => _u16_total_key + 11,
@@ -1121,21 +1150,6 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
         //     "F" => _u16_total_key + 15,
         //     _ => _u16_total_key + second_char.parse::<u16>().unwrap(),
         // };
-        if second_char == "A" || second_char == "a" {
-            _u16_total_key = _u16_total_key + 10;
-        } else if second_char == "B" || second_char == "b" {
-            _u16_total_key = _u16_total_key + 11;
-        } else if second_char == "C" || second_char == "c" {
-            _u16_total_key = _u16_total_key + 12;
-        } else if second_char == "D" || second_char == "d" {
-            _u16_total_key = _u16_total_key + 13;
-        } else if second_char == "E" || second_char == "e" {
-            _u16_total_key = _u16_total_key + 14;
-        } else if second_char == "F" || second_char == "f" {
-            _u16_total_key = _u16_total_key + 15;
-        } else {
-            _u16_total_key = _u16_total_key + second_char.parse::<u16>().unwrap()
-        }
         let find_key: Option<&KeyCodesCsv> =
             keys_json.keys.iter().find(|f| &f.ascii == &_u16_total_key);
         let mut key_from_json: u16 = 0;
