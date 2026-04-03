@@ -104,13 +104,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // let directory_files: Result<Output, std::io::Error> = execute_command("cmd", &["/C", "dir /b /a-d"]);
 
     let keys_json: Keys = serde_json::from_str(&keys_buffer).expect("Unable to get data");
-    // keys_json.keys.iter().for_each(|f| {
-    //     println!("{}, {}", &f.name, &f.ascii);
-    // });
-    // match directory_files {
-    //     Ok(v) => println!("{:?}", v),
-    //     _ => println!("Error"),
-    // };
     let mut buffer: String = String::new();
     /*
         let mut file_name: String = String::new();
@@ -302,22 +295,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let _mouse_movements: Vec<Steps> = Vec::new();
     for i in 0..loops {
-        // if _current_system_time.wHour == 13 && _current_system_time.wMinute > 14 {
-        //     unsafe {
-        //         let _ = LockWorkStation();
-        //         std::process::exit(0x000)
-        //         // let _ = InitiateSystemShutdownA(None,None,0,true, false);
-        //         // let _ = InitiateShutdownA(None,None,0,SHUTDOWN_FORCE_OTHERS|SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED);
-        //     }
-        // }
-        if _current_system_time.wHour == 12 && _current_system_time.wMinute > 30 {
-            unsafe {
-                let _ = LockWorkStation();
-                std::process::exit(0x000)
-                // let _ = InitiateSystemShutdownA(None,None,0,true, false);
-                // let _ = InitiateShutdownA(None,None,0,SHUTDOWN_FORCE_OTHERS|SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED);
-            }
-        }
         // if _current_system_time.wHour == 15 && _current_system_time.wMinute == 00 {
         //     unsafe {
         //         let _ = LockWorkStation();
@@ -346,14 +323,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
         if i > 0 {
             if website {
-                // let _ = execute_command(
-                //     "cmd",
-                //     &["/C", "start msedge --new-window -incognito", &_program],
-                // );
-                // let _ = execute_command(
-                //     "cmd",
-                //     &["/C", "start msedge --new-window -inprivate", &_program],
-                // );
                 let _ = execute_command("cmd", &["/C", "start msedge --new-window", &_program]);
                 _result_window_text = get_current_window_heading_text(&log_file_path);
                 update_log_file(
@@ -377,8 +346,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut _current_csv_index: usize = 0;
         for (_, key) in hold_keys_vector_steps.iter().enumerate() {
             for _ in 0..key.r#loop {
-                // println!("{}", j);
-                // std::thread::sleep(std::time::Duration::from_millis(1));
                 let result_window_title_main: String =
                     get_current_window_heading_text(&log_file_path);
 
@@ -511,55 +478,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         );
                     }
                 } else if key.code == 994 {
-                    // Window Title
-                    // std::thread::sleep(std::time::Duration::from_millis(10));
-
-                    // let result_window_title: String =
-                    // get_current_window_heading_text(&log_file_path);
-                    // if result_window_title.contains("Log") {
-                    //     println!("LOGIN: {}", result_window_title);
-                    //     send_input_messages(162, false, true);
-                    //     send_input_messages(160, false, true);
-                    //     send_input_messages(74, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, true, true);
-                    //     send_input_messages(160, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     add_sentence(
-                    //         &key.sentence,
-                    //         &key.code,
-                    //         &keys_json,
-                    //         &log_file_path,
-                    //         data.word_delay,
-                    //     );
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));BT009
-
-                    //     send_input_messages(13, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, false, true);
-                    //     send_input_messages(160, false, true);
-                    //     send_input_messages(74, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, true, true);
-                    //     send_input_messages(160, true, true);
-                    // } else if !result_window_title.contains(&key.name)
-                    //     && !result_window_title.contains("log")
-                    // {
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, false, true);
-                    //     send_input_messages(160, false, true);
-                    //     send_input_messages(74, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, true, true);
-                    //     send_input_messages(160, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     result_window_title =
-                    //         get_current_window_heading_text(&log_file_path);
-                    //     send_input_messages(hold_keys_vector_steps[j - 1].code, true, true);
-                    //     result_window_title =
-                    //         get_current_window_heading_text(&log_file_path)
-                    // }
-                    // println!("560:- RESULT TITLE: {:?}", result_window_title);
                     let mut get_current_window_text_for_loop: String =
                         get_current_window_heading_text(&log_file_path);
                     if key.name.contains("Check") {
@@ -580,8 +498,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             get_current_window_text_for_loop =
                                 get_current_window_heading_text(&log_file_path);
                             println!("SLEEPING: {}", get_current_window_text_for_loop);
+                            update_log_file(
+                                &log_file_path,
+                                format!(
+                                    "Sleeping until it finds: {}. TIME: {}:{}:{}",
+                                    get_current_window_text_for_loop,
+                                    _current_system_time.wMinute,
+                                    _current_system_time.wSecond,
+                                    _current_system_time.wMilliseconds
+                                )
+                                .as_str(),
+                            );
                             if get_current_window_text_for_loop.contains(key.sentence.as_str()) {
                                 println!("CURRENT WINDOW: {}", get_current_window_text_for_loop);
+                                update_log_file(
+                                    &log_file_path,
+                                    format!(
+                                        "Found window with title: {}. TIME: {}:{}:{}",
+                                        get_current_window_text_for_loop,
+                                        _current_system_time.wMinute,
+                                        _current_system_time.wSecond,
+                                        _current_system_time.wMilliseconds
+                                    )
+                                    .as_str(),
+                                );
                                 break;
                             }
                         }
@@ -867,14 +807,6 @@ fn send_multi_input_messages_from_i16(virtual_key_num: i16, virtual_key_num_two:
             &[input_release_struct_key_two],
             core::mem::size_of::<INPUT>() as i32,
         );
-        // let shift_key_state:i16 = GetKeyState(get_key_state_int as i32);
-        // println!("Shift Key State: {:?}", shift_key_state);
-        // if shift_key_state == 1 {
-        //     let _ = SendInput(
-        //         &[input_release_struct],
-        //         core::mem::size_of::<INPUT>() as i32,
-        //     );
-        // }
     }
 }
 fn send_input_messages(virtual_key_num: u16, release_key: bool, individial_press: bool) {
@@ -896,15 +828,6 @@ fn send_input_messages(virtual_key_num: u16, release_key: bool, individial_press
             dwExtraInfo: 0x0008 as usize,
         },
     };
-    // let release_shift: INPUT_0 = INPUT_0 {
-    //     ki: KEYBDINPUT {
-    //         wVk: VIRTUAL_KEY(160),
-    //         wScan: 0,
-    //         dwFlags: KEYEVENTF_KEYUP | KEYEVENTF_UNICODE,
-    //         time: 0,
-    //         dwExtraInfo: 0x0008 as usize,
-    //     },
-    // };
     let input_struct: INPUT = INPUT {
         r#type: INPUT_TYPE(1),
         Anonymous: input_zero,
@@ -913,13 +836,6 @@ fn send_input_messages(virtual_key_num: u16, release_key: bool, individial_press
         r#type: INPUT_TYPE(1),
         Anonymous: release_zero,
     };
-    // let input_release_shift_struct: INPUT = INPUT {
-    //     r#type: INPUT_TYPE(1),
-    //     Anonymous: release_shift,
-    // };
-    // let get_key_state_int = virtual_key_num as i32;
-
-    // let _ = GetKeyState(get_key_state_int);
     match individial_press {
         true => {
             unsafe {
@@ -942,12 +858,6 @@ fn send_input_messages(virtual_key_num: u16, release_key: bool, individial_press
             );
         },
     }
-    // let _ = SendInput(
-    //     &[input_release_shift_struct],
-    //     core::mem::size_of::<INPUT>() as i32,
-    // );
-
-    // println!("{:?}", key_state);
 }
 fn execute_command(exe: &str, args: &[&str]) -> Result<Output, std::io::Error> {
     std::process::Command::new(exe).args(&*args).output()
@@ -1163,10 +1073,6 @@ async fn get_user_details_graph(
         .json::<GraphUserDetails>()
         .await?;
 
-    // let response:GraphUserDetails = reqwest::get("https://graph.microsoft.com/v1.0/me")
-    //     .await?
-    //     .json::<GraphUserDetails>()
-    //     .await?;
     Ok(response)
 }
 fn copy_all_files_in_directory(
@@ -1203,7 +1109,7 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
         hex_code = hex_code.replace("0x", "");
         let first_char: String = hex_code[..1].to_owned();
         let second_char: String = hex_code[1..].to_owned();
-        // println!("{}, {}",first_char, second_char);
+
         _u16_total_key = first_char.parse::<u16>().unwrap();
         _u16_total_key = _u16_total_key * 16;
         // _u16_total_key = match &second_char as &str {
@@ -1315,12 +1221,7 @@ fn update_log_file(log_file_path: &str, additional_data: &str) {
 }
 fn get_current_window_heading_text(log_file_path: &str) -> String {
     let mut _window_text: Vec<u8> = vec![0; 150];
-    // let mut _window_text_u_16: Vec<u16> = vec![0; 150];
 
-    // unsafe {
-    //     let _ = SetActiveWindow(_current_window);
-    //     let _ = SetForegroundWindow(_current_window);
-    // }
     unsafe {
         let for_ground_window: HWND = GetForegroundWindow();
         // let _ = SetForegroundWindow(for_ground_window);
@@ -1332,9 +1233,7 @@ fn get_current_window_heading_text(log_file_path: &str) -> String {
 
     let mut result_window_text: String =
         String::from_utf8(_window_text).expect("Unable to export to string");
-    // let mut result_window_text_u_16: String = String::from_utf16_lossy(&_window_text_u_16);
-    // result_window_text_u_16 = String::from(result_window_text_u_16);
-    // println!("result_window_text_u_16 {:?}", result_window_text_u_16);
+
     result_window_text = String::from(result_window_text.trim_matches(char::from(0)));
     // println!("Current Window Text: {}", result_window_text);
     update_log_file(
