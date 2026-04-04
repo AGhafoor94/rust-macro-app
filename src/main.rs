@@ -152,7 +152,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // let _virtual_keys_vector: Vec<u16> = Vec::new();
     let mut _program: String = String::new();
     let mut website: bool = false;
-    let continue_app: bool = true;
     let mut csv_lines: Vec<&str> = vec![];
     let mut _read_csv_file: bool = false;
     let mut buffer_csv_lines: String = String::new();
@@ -187,9 +186,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
     // println!("{}", log_date);
-    if !continue_app {
-        std::process::exit(0x000)
-    }
     if !&data.hotkey.is_empty() {
         // println!("{:?}", data.hotkey.split(','));
         // let split_comma_count = data.hotkey.split(',').count();
@@ -291,18 +287,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut _result_window_text: String = get_current_window_heading_text(&log_file_path);
     std::thread::sleep(std::time::Duration::from_millis(500));
     // let _ = SetForegroundWindow(_current_window);
-    if _result_window_text.to_lowercase().contains("login") {}
 
     let _mouse_movements: Vec<Steps> = Vec::new();
     for i in 0..loops {
-        // if _current_system_time.wHour == 15 && _current_system_time.wMinute == 00 {
-        //     unsafe {
-        //         let _ = LockWorkStation();
-        //         std::process::exit(0x000)
-        //         // let _ = InitiateSystemShutdownA(None,None,0,true, false);
-        //         // let _ = InitiateShutdownA(None,None,0,SHUTDOWN_FORCE_OTHERS|SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED);
-        //     }
-        // }
         if get_key_state(162) && get_key_state(91) {
             std::process::exit(0x000)
         }
@@ -1140,7 +1127,7 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
             // std::thread::sleep(std::time::Duration::from_millis(10));
         }
 
-        std::thread::sleep(std::time::Duration::from_millis(20));
+        std::thread::sleep(std::time::Duration::from_millis(18));
         // _u16_total_key = match &second_char as &str {
         //     "A" => _u16_total_key + 10,
         //     "B" => _u16_total_key + 11,
@@ -1165,28 +1152,55 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
             None => update_log_file(log_file_path, "Can't find matching key"),
         };
         // check if key is less than u16 then shift
-        unsafe {
-            let key_json: i16 = VkKeyScanW(key_from_json);
-            if (key_from_json >> 8 & 1) == 1 {
-                // let mut shift_key_state:i16 = GetKeyState(20);
+        let mut key_json: i16 = 0;
+        /*
+            unsafe {
+                let key_json: i16 = VkKeyScanW(key_from_json);
+                if (key_from_json >> 8 & 1) == 1 {
+                    // let mut shift_key_state:i16 = GetKeyState(20);
 
-                if hold_shift {
-                    send_multi_input_messages_from_i16(16, key_json, delay)
+                    if hold_shift {
+                        send_multi_input_messages_from_i16(16, key_json, delay)
+                    } else {
+                        send_input_messages(20, true, true);
+                        // std::thread::sleep(std::time::Duration::from_millis(22));
+                        send_input_messages_from_i16(key_json, true, true);
+                        // shift_key_state = GetKeyState(20);
+                        std::thread::sleep(std::time::Duration::from_millis(delay));
+                        // println!("SHIFT STATE SHOULD BE 1 part 2: {:?}", shift_key_state);
+                        send_input_messages(20, true, true)
+                    }
                 } else {
-                    send_input_messages(20, true, true);
-                    // std::thread::sleep(std::time::Duration::from_millis(22));
-                    send_input_messages_from_i16(key_json, true, true);
-                    // shift_key_state = GetKeyState(20);
-                    std::thread::sleep(std::time::Duration::from_millis(delay));
-                    // println!("SHIFT STATE SHOULD BE 1 part 2: {:?}", shift_key_state);
-                    send_input_messages(20, true, true)
+                    if hold_shift {
+                        send_multi_input_messages_from_i16(16, key_json, delay)
+                    } else {
+                        send_input_messages_from_i16(key_json, true, true)
+                    }
                 }
+            }
+        */
+        unsafe {
+            key_json = VkKeyScanW(key_from_json);
+        }
+        if (key_from_json >> 8 & 1) == 1 {
+            // let mut shift_key_state:i16 = GetKeyState(20);
+
+            if hold_shift {
+                send_multi_input_messages_from_i16(16, key_json, delay)
             } else {
-                if hold_shift {
-                    send_multi_input_messages_from_i16(16, key_json, delay)
-                } else {
-                    send_input_messages_from_i16(key_json, true, true)
-                }
+                send_input_messages(20, true, true);
+                // std::thread::sleep(std::time::Duration::from_millis(22));
+                send_input_messages_from_i16(key_json, true, true);
+                // shift_key_state = GetKeyState(20);
+                std::thread::sleep(std::time::Duration::from_millis(delay));
+                // println!("SHIFT STATE SHOULD BE 1 part 2: {:?}", shift_key_state);
+                send_input_messages(20, true, true)
+            }
+        } else {
+            if hold_shift {
+                send_multi_input_messages_from_i16(16, key_json, delay)
+            } else {
+                send_input_messages_from_i16(key_json, true, true)
             }
         }
         // std::thread::sleep(std::time::Duration::from_millis(100))
