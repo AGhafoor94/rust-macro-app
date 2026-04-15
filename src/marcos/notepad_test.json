@@ -1,0 +1,113 @@
+{
+  "appName": "NOTEPAD LONG SENTENCE TEST",
+  "loop": 1,
+  "description": "",
+  "hotkey": "162, 164",
+  "wordDelay": 10,
+  "delayForEachLoop": 1000,
+  "readCsv": "",
+  "app": [
+    {
+      "appValue": "app",
+      "websiteOpen": false,
+      "steps": [
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "Command",
+          "code": 987,
+          "held": false,
+          "sentence": "start notepad",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "Check",
+          "code": 994,
+          "held": false,
+          "sentence": "Notepad",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "Control Key",
+          "code": 162,
+          "held": true,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "N Key",
+          "code": 78,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "Control Key",
+          "code": 162,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "Check",
+          "code": 994,
+          "held": false,
+          "sentence": "Untitled",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Sentence",
+          "code": 998,
+          "sentence": "1 - TEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\n31 - TEST word with slash n\n",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        }
+      ]
+    }
+  ]
+}

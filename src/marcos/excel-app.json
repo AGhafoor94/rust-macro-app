@@ -1,0 +1,162 @@
+{
+  "appName": "EXCEL",
+  "loop": 1,
+  "description": "",
+  "hotkey": "162, 164",
+  "wordDelay": 10,
+  "delayForEachLoop": 1000,
+  "readCsv": "",
+  "app": [
+    {
+      "appValue": "EXCEL",
+      "websiteOpen": false,
+      "steps": [
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1500,
+          "loop": 1
+        },
+        {
+          "name": "ALT key",
+          "code": 164,
+          "held": true,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Space key",
+          "code": 32,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1500,
+          "loop": 1
+        },
+        {
+          "name": "X Key",
+          "code": 88,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "ALT key",
+          "code": 164,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 2000,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 2000,
+          "loop": 1
+        },
+        {
+          "name": "Check",
+          "code": 994,
+          "held": false,
+          "sentence": "Excel",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Enter key",
+          "code": 13,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 2000,
+          "loop": 1
+        },
+        {
+          "name": "Shift key",
+          "code": 160,
+          "sentence": "",
+          "held": true,
+          "time": 0,
+          "loop": 1
+        },
+
+        {
+          "name": "Down key",
+          "code": 40,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 15
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "Right key",
+          "code": 39,
+          "sentence": "",
+          "held": true,
+          "time": 0,
+          "loop": 15
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "Shift key",
+          "code": 160,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        }
+      ]
+    }
+  ]
+}
