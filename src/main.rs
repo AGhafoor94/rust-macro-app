@@ -2,6 +2,7 @@ use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use std::{
+    default,
     env::args,
     fs::{self, DirEntry, File, FileType},
     io::{self, Read},
@@ -12,6 +13,7 @@ use std::{
 // #![windows_subsystem = "windows"]
 use reqwest::header::HeaderMap;
 use reqwest::header::{ACCEPT, CONTENT_TYPE};
+
 use windows::Win32::{
     Foundation::*,
     System::{
@@ -38,6 +40,7 @@ struct Macro {
 struct App {
     app_value: String,
     website_open: bool,
+    r#loop: u16,
     steps: Vec<Steps>,
 }
 #[derive(Serialize, Deserialize)]
@@ -91,6 +94,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         _current_system_time.wYear
     );
     let mut _log_file: Result<File, io::Error> = File::open(&log_file_path);
+    let error_log_file_path: String = format!(
+        "Error Log File {}-{}-{}.txt",
+        check_for_length_time_and_date(_current_system_time.wDay),
+        check_for_length_time_and_date(_current_system_time.wMonth),
+        _current_system_time.wYear
+    );
+    let mut _error_log_file: Result<File, io::Error> = File::open(&error_log_file_path);
     // let graph_token: GraphToken = get_token().await?;
     let mut keys_buffer: String = String::new();
     // std::thread::sleep(std::time::Duration::from_millis(500));
@@ -193,10 +203,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .as_str(),
         );
     }
-    // println!("{}", log_date);
-    if !continue_app {
-        std::process::exit(0x000)
-    }
+
     if !&data.hotkey.is_empty() {
         // println!("{:?}", data.hotkey.split(','));
         // let split_comma_count = data.hotkey.split(',').count();
@@ -234,24 +241,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
         if String::eq(&app.app_value, "app") || app.app_value.is_empty() {
             _program = app.app_value.to_owned();
-            let _ = app
-                .steps
-                .into_iter()
-                .for_each(|step| hold_keys_vector_steps.push(step));
             std::thread::sleep(std::time::Duration::from_millis(250));
         } else {
             if app.website_open {
                 _program = app.app_value.to_owned();
                 website = true;
 
-                // let _ = execute_command(
-                //     "cmd",
-                //     &["/C", "start msedge --new-window -incognito", &app.app_value],
-                // );
-                // let _ = execute_command(
-                //     "cmd",
-                //     &["/C", "start msedge --new-window -inprivate", &app.app_value],
-                // );
                 let _ =
                     execute_command("cmd", &["/C", "start msedge --new-window", &app.app_value]);
 
@@ -262,10 +257,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 unsafe {
                     let _ = SetActiveWindow(GetForegroundWindow());
                 }
-                let _ = app
-                    .steps
-                    .into_iter()
-                    .for_each(|step| hold_keys_vector_steps.push(step));
             } else {
                 _program = app.app_value.to_owned();
                 let _ = execute_command(
@@ -277,14 +268,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     &log_file_path,
                     format!("Opening File: {}.exe", &app.app_value).as_str(),
                 );
-
-                let _ = app
-                    .steps
-                    .into_iter()
-                    .for_each(|step| hold_keys_vector_steps.push(step));
             }
-            std::thread::sleep(std::time::Duration::from_millis(1250));
+            std::thread::sleep(std::time::Duration::from_millis(250));
         }
+        let _ = app
+            .steps
+            .into_iter()
+            .for_each(|step| hold_keys_vector_steps.push(step));
     }
     let mut _current_window: HWND = HWND {
         ..Default::default()
@@ -298,27 +288,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut _result_window_text: String = get_current_window_heading_text(&log_file_path);
     std::thread::sleep(std::time::Duration::from_millis(500));
     // let _ = SetForegroundWindow(_current_window);
-    if _result_window_text.to_lowercase().contains("login") {}
+    // if _result_window_text.to_lowercase().contains("login") {}
 
     let _mouse_movements: Vec<Steps> = Vec::new();
     for i in 0..loops {
-        // if _current_system_time.wHour == 13 && _current_system_time.wMinute > 14 {
-        //     unsafe {
-        //         let _ = LockWorkStation();
-        //         std::process::exit(0x000)
-        //         // let _ = InitiateSystemShutdownA(None,None,0,true, false);
-        //         // let _ = InitiateShutdownA(None,None,0,SHUTDOWN_FORCE_OTHERS|SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED);
-        //     }
-        // }
-        if _current_system_time.wHour == 12 && _current_system_time.wMinute > 30 {
-            unsafe {
-                let _ = LockWorkStation();
-                std::process::exit(0x000)
-                // let _ = InitiateSystemShutdownA(None,None,0,true, false);
-                // let _ = InitiateShutdownA(None,None,0,SHUTDOWN_FORCE_OTHERS|SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED);
-            }
-        }
-        // if _current_system_time.wHour == 15 && _current_system_time.wMinute == 00 {
+        // if _current_system_time.wHour > 14 {
         //     unsafe {
         //         let _ = LockWorkStation();
         //         std::process::exit(0x000)
@@ -399,7 +373,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         format!("Running Command: ({})", &key.sentence).as_str(),
                     );
                     let output: Result<Output, io::Error> =
-                        execute_command("cmd", &["/C", &key.sentence]);
+                        execute_command(&key.name, &["/C", &key.sentence]);
                     println!("{:?}", output);
                     match output {
                         Ok(o) => update_log_file(
@@ -511,55 +485,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         );
                     }
                 } else if key.code == 994 {
-                    // Window Title
-                    // std::thread::sleep(std::time::Duration::from_millis(10));
-
-                    // let result_window_title: String =
-                    // get_current_window_heading_text(&log_file_path);
-                    // if result_window_title.contains("Log") {
-                    //     println!("LOGIN: {}", result_window_title);
-                    //     send_input_messages(162, false, true);
-                    //     send_input_messages(160, false, true);
-                    //     send_input_messages(74, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, true, true);
-                    //     send_input_messages(160, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     add_sentence(
-                    //         &key.sentence,
-                    //         &key.code,
-                    //         &keys_json,
-                    //         &log_file_path,
-                    //         data.word_delay,
-                    //     );
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));BT009
-
-                    //     send_input_messages(13, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, false, true);
-                    //     send_input_messages(160, false, true);
-                    //     send_input_messages(74, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, true, true);
-                    //     send_input_messages(160, true, true);
-                    // } else if !result_window_title.contains(&key.name)
-                    //     && !result_window_title.contains("log")
-                    // {
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, false, true);
-                    //     send_input_messages(160, false, true);
-                    //     send_input_messages(74, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     send_input_messages(162, true, true);
-                    //     send_input_messages(160, true, true);
-                    //     std::thread::sleep(std::time::Duration::from_millis(2500));
-                    //     result_window_title =
-                    //         get_current_window_heading_text(&log_file_path);
-                    //     send_input_messages(hold_keys_vector_steps[j - 1].code, true, true);
-                    //     result_window_title =
-                    //         get_current_window_heading_text(&log_file_path)
-                    // }
-                    // println!("560:- RESULT TITLE: {:?}", result_window_title);
                     let mut get_current_window_text_for_loop: String =
                         get_current_window_heading_text(&log_file_path);
                     if key.name.contains("Check") {
@@ -576,24 +501,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .as_str(),
                         );
                         loop {
-                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            std::thread::sleep(std::time::Duration::from_millis(500));
                             get_current_window_text_for_loop =
                                 get_current_window_heading_text(&log_file_path);
-                            println!("SLEEPING: {}", get_current_window_text_for_loop);
+                            println!(
+                                "SLEEPING: {}, SENTENCE: {}",
+                                get_current_window_text_for_loop, key.sentence
+                            );
                             if get_current_window_text_for_loop.contains(key.sentence.as_str()) {
                                 println!("CURRENT WINDOW: {}", get_current_window_text_for_loop);
                                 break;
                             }
                         }
-                    } else if key.name.contains("Skip") {
+                    }
+                    if key.name.contains("Skip") {
+                        get_current_window_text_for_loop =
+                            get_current_window_heading_text(&log_file_path);
                         let split_key_name_by_hyphen: Vec<&str> = key.name.split("-").collect();
-                        if get_current_window_text_for_loop.contains(split_key_name_by_hyphen[1]) {
+                        println!(
+                            "HITTING SKIP {}, SENTENCE: {} SPLIT {}, NAME: {}",
+                            key.name,
+                            key.sentence,
+                            split_key_name_by_hyphen[1],
+                            get_current_window_text_for_loop
+                        );
+                        if get_current_window_text_for_loop.contains(split_key_name_by_hyphen[1])
+                            || get_current_window_text_for_loop.to_lowercase().trim()
+                                == split_key_name_by_hyphen[1].to_lowercase().trim()
+                        {
                             println!("HIT HERE {}", get_current_window_text_for_loop);
                             let sentence_key_split_new_line: Vec<&str> =
                                 key.sentence.split("\n").collect();
                             let key_code_in_sentence: usize =
                                 sentence_key_split_new_line.iter().count();
                             let mut keys_loop_press_vec: Vec<u16> = vec![];
+
                             for key in 0..key_code_in_sentence {
                                 let strings_keys_split_by_hyphen: Vec<&str> =
                                     sentence_key_split_new_line[key].split("-").collect();
@@ -622,7 +564,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     );
                                 }
                             }
-                            println!("{:?}", keys_loop_press_vec);
+                            println!("keys_loop_press_vec {:?}", keys_loop_press_vec);
                             for key_in_loop_skip in keys_loop_press_vec {
                                 std::thread::sleep(std::time::Duration::from_millis(500));
                                 send_input_messages(key_in_loop_skip, true, true);
@@ -632,10 +574,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         send_input_messages(162, false, true);
                         send_input_messages(160, false, true);
                         send_input_messages(74, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
                         send_input_messages(162, true, true);
                         send_input_messages(160, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
                         add_sentence(
                             &key.sentence,
                             &key.code,
@@ -643,21 +585,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             &log_file_path,
                             data.word_delay,
                         );
-                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
                         send_input_messages(13, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
                         send_input_messages(162, false, true);
                         send_input_messages(160, false, true);
                         send_input_messages(74, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
                         send_input_messages(162, true, true);
-                        send_input_messages(160, true, true)
+                        send_input_messages(160, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000))
                     } else if key.name.contains("Log") && !result_window_title_main.contains("Log")
                         || !result_window_title_main.contains(&key.name)
                     {
                         println!("Not Current Screen")
                     } else {
-                        println!("560:- RESULT TITLE: {:?}", result_window_title_main);
+                        println!(
+                            "660:- RESULT TITLE: {:?}, sentence {}",
+                            result_window_title_main, &key.sentence
+                        );
                         send_input_messages(162, false, true);
                         send_input_messages(160, false, true);
                         send_input_messages(74, true, true);
@@ -674,7 +620,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         );
                         std::thread::sleep(std::time::Duration::from_millis(1000));
                         send_input_messages(13, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        std::thread::sleep(std::time::Duration::from_millis(2000));
                         send_input_messages(162, false, true);
                         send_input_messages(160, false, true);
                         send_input_messages(74, true, true);
@@ -963,13 +909,15 @@ fn send_mouse_input_message(
     let mut point_struct: POINT = POINT {
         ..Default::default()
     };
-    let mut _system_metrics: i32 = 0;
+    let mut _system_metrics_x: i32 = 0;
+    let mut _system_metrics_y: i32 = 0;
     let mut _input_mouse_struct: INPUT = INPUT {
         ..Default::default()
     };
     unsafe {
         let _ = GetCursorPos(&mut point_struct);
-        _system_metrics = GetSystemMetrics(SM_CXSCREEN);
+        _system_metrics_x = GetSystemMetrics(SM_CXSCREEN);
+        _system_metrics_y = GetSystemMetrics(SM_CYSCREEN)
     }
     match move_mouse {
         true => {
@@ -993,8 +941,8 @@ fn send_mouse_input_message(
                         r#type: INPUT_TYPE(0),
                         Anonymous: INPUT_0 {
                             mi: MOUSEINPUT {
-                                dx: x * (65535 / _system_metrics),
-                                dy: y * (65535 / _system_metrics),
+                                dx: x * (65535 / _system_metrics_x),
+                                dy: y * (65535 / _system_metrics_y),
                                 mouseData: 0x01,
                                 dwFlags: MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE,
                                 time: 0,
@@ -1022,8 +970,8 @@ fn send_mouse_input_message(
                         r#type: INPUT_TYPE(0),
                         Anonymous: INPUT_0 {
                             mi: MOUSEINPUT {
-                                dx: x * (65535 / _system_metrics),
-                                dy: y * (65535 / _system_metrics),
+                                dx: x * (65535 / _system_metrics_x),
+                                dy: y * (65535 / _system_metrics_y),
                                 mouseData: 0x01,
                                 dwFlags: MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE,
                                 time: 0,
@@ -1202,33 +1150,38 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
         let mut hex_code: String = format!("{f:#X}");
         hex_code = hex_code.replace("0x", "");
         let first_char: String = hex_code[..1].to_owned();
-        let second_char: String = hex_code[1..].to_owned();
-        // println!("{}, {}",first_char, second_char);
-        _u16_total_key = first_char.parse::<u16>().unwrap();
-        _u16_total_key = _u16_total_key * 16;
-        // _u16_total_key = match &second_char as &str {
-        //     "A" => _u16_total_key + 10,
-        //     "B" => _u16_total_key + 11,
-        //     "C" => _u16_total_key + 12,
-        //     "D" => _u16_total_key + 13,
-        //     "E" => _u16_total_key + 14,
-        //     "F" => _u16_total_key + 15,
-        //     _ => _u16_total_key + second_char.parse::<u16>().unwrap(),
-        // };
-        if second_char == "A" || second_char == "a" {
-            _u16_total_key = _u16_total_key + 10;
-        } else if second_char == "B" || second_char == "b" {
-            _u16_total_key = _u16_total_key + 11;
-        } else if second_char == "C" || second_char == "c" {
-            _u16_total_key = _u16_total_key + 12;
-        } else if second_char == "D" || second_char == "d" {
-            _u16_total_key = _u16_total_key + 13;
-        } else if second_char == "E" || second_char == "e" {
-            _u16_total_key = _u16_total_key + 14;
-        } else if second_char == "F" || second_char == "f" {
-            _u16_total_key = _u16_total_key + 15;
+        if f <= 15 {
+            _u16_total_key = first_char.parse::<u16>().unwrap();
         } else {
-            _u16_total_key = _u16_total_key + second_char.parse::<u16>().unwrap()
+            let first_char: String = hex_code[..1].to_owned();
+            let second_char: String = hex_code[1..].to_owned();
+            // println!("{}, {}",first_char, second_char);
+            _u16_total_key = first_char.parse::<u16>().unwrap();
+            _u16_total_key = _u16_total_key * 16;
+            match &second_char as &str {
+                "A" => _u16_total_key += 10,
+                "B" => _u16_total_key += 11,
+                "C" => _u16_total_key += 12,
+                "D" => _u16_total_key += 13,
+                "E" => _u16_total_key += 14,
+                "F" => _u16_total_key += 15,
+                _ => _u16_total_key += second_char.parse::<u16>().unwrap(),
+            };
+            // if second_char == "A" || second_char == "a" {
+            //     _u16_total_key = _u16_total_key + 10;
+            // } else if second_char == "B" || second_char == "b" {
+            //     _u16_total_key = _u16_total_key + 11;
+            // } else if second_char == "C" || second_char == "c" {
+            //     _u16_total_key = _u16_total_key + 12;
+            // } else if second_char == "D" || second_char == "d" {
+            //     _u16_total_key = _u16_total_key + 13;
+            // } else if second_char == "E" || second_char == "e" {
+            //     _u16_total_key = _u16_total_key + 14;
+            // } else if second_char == "F" || second_char == "f" {
+            //     _u16_total_key = _u16_total_key + 15;
+            // } else {
+            //     _u16_total_key = _u16_total_key + second_char.parse::<u16>().unwrap()
+            // }
         }
         let find_key: Option<&KeyCodesCsv> =
             keys_json.keys.iter().find(|f| &f.ascii == &_u16_total_key);
@@ -1314,7 +1267,7 @@ fn update_log_file(log_file_path: &str, additional_data: &str) {
     .expect("Error");
 }
 fn get_current_window_heading_text(log_file_path: &str) -> String {
-    let mut _window_text: Vec<u8> = vec![0; 150];
+    let mut _window_text: Vec<u8> = vec![0; 1500];
     // let mut _window_text_u_16: Vec<u16> = vec![0; 150];
 
     // unsafe {
@@ -1326,15 +1279,14 @@ fn get_current_window_heading_text(log_file_path: &str) -> String {
         // let _ = SetForegroundWindow(for_ground_window);
         let _ = SetActiveWindow(for_ground_window);
         let _ = GetWindowTextA(for_ground_window, &mut _window_text);
-        // let _ = GetWindowTextW(current_window, &mut _window_text_u_16);
     }
     std::thread::sleep(std::time::Duration::from_millis(5));
 
     let mut result_window_text: String =
         String::from_utf8(_window_text).expect("Unable to export to string");
     // let mut result_window_text_u_16: String = String::from_utf16_lossy(&_window_text_u_16);
-    // result_window_text_u_16 = String::from(result_window_text_u_16);
-    // println!("result_window_text_u_16 {:?}", result_window_text_u_16);
+    // result_window_text_u_16 = String::from(resultl_window_text_u_16);
+    // println!("result_window_text_u_16 {:?}", resut_window_text_u_16);
     result_window_text = String::from(result_window_text.trim_matches(char::from(0)));
     // println!("Current Window Text: {}", result_window_text);
     update_log_file(

@@ -1,0 +1,34 @@
+{
+  "appName": "Clipboard API Test",
+  "loop": 1,
+  "readCsv": "",
+  "hotkey": "",
+  "description": "",
+  "wordDelay": 5,
+  "delayForEachLoop": 10,
+  "app": [
+    {
+      "appValue": "app",
+      "websiteOpen": false,
+      "loop": 1,
+      "steps": [
+        {
+          "name": "Wait key",
+          "code": 999,
+          "sentence": "",
+          "held": false,
+          "time": 1,
+          "loop": 1
+        },
+        {
+          "name": "Open Clipboard",
+          "code": 993,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 6
+        }
+      ]
+    }
+  ]
+}

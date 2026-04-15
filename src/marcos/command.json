@@ -1,49 +1,90 @@
 {
-    "appName": "notepad",
-    "loop": 1,
-    "readCsv": "",
-    "hotkey": "162,72",
-    "description":"",
-    "wordDelay": 5,
-    "delayForEachLoop": 10,
-    "app": [
+  "appName": "EFin Update From CSV",
+  "loop": 1,
+  "description": "",
+  "hotkey": "162, 74",
+  "readCsv": "C:\\Users\\adnan.ghafoor\\downloads\\imp28.csv",
+  "wordDelay": 5,
+  "delayForEachLoop": 250,
+  "app": [
+    {
+      "appValue": "app",
+      "websiteOpen": false,
+      "loop": 1,
+      "steps": [
         {
-            "appValue": "app",
-            "websiteOpen": false,
-            "steps": [
-                {
-                    "name":"Wait",
-                    "code": 999,
-                    "held": false,
-                    "sentence": "",
-                    "time": 1,
-                    "loop": 1
-                },
-                {
-                    "name":"Command",
-                    "code": 987,
-                    "sentence": "cd C:\\Users\\adnan\\Downloads && dir/O:-D /b *.pdf*",
-                    "held": false,
-                    "time": 0,
-                    "loop": 1
-                },
-                {
-                    "name":"Wait",
-                    "code": 999,
-                    "held": false,
-                    "sentence": "",
-                    "time": 1,
-                    "loop": 1
-                },
-                {
-                    "name":"Command",
-                    "code": 987,
-                    "sentence": "powershell.exe -command Invoke-Item C:\\users\\adnan\\downloads",
-                    "held": false,
-                    "time": 0,
-                    "loop": 3
-                }
-            ]
+          "name": "CSV",
+          "code": 995,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Tab",
+          "code": 9,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "CSV",
+          "code": 995,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Tab",
+          "code": 9,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 25,
+          "loop": 1
+        },
+        {
+          "name": "Down key",
+          "code": 40,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Shift key",
+          "code": 160,
+          "sentence": "",
+          "held": true,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Tab",
+          "code": 9,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 2
+        },
+        {
+          "name": "Shift key",
+          "code": 160,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
         }
-    ]
+      ]
+    }
+  ]
 }

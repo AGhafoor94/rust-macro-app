@@ -1,1 +1,0 @@
-"sentence": "cd C:\\Users\\adnan.ghafoor\\Downloads && dir/O:-D *.jnlp* && start .",

@@ -10,6 +10,7 @@
     {
       "appValue": "app",
       "websiteOpen": false,
+      "loop": 1,
       "steps": [
         {
           "name": "Wait",
