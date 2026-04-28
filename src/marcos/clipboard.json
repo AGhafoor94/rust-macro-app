@@ -8,9 +8,10 @@
   "delayForEachLoop": 10,
   "app": [
     {
-      "appValue": "app",
+      "appValue": "Excel",
       "websiteOpen": false,
       "loop": 1,
+      "runOnce": [],
       "steps": [
         {
           "name": "Wait key",
@@ -21,12 +22,20 @@
           "loop": 1
         },
         {
-          "name": "Open Clipboard",
-          "code": 993,
+          "name": "Enter Key",
+          "code": 13,
           "sentence": "",
           "held": false,
           "time": 0,
           "loop": 6
+        },
+        {
+          "name": "cmd",
+          "code": 987,
+          "held": false,
+          "sentence": "cd C:\\Users\\adnan\\Downloads\\Programming Projects\\Rust\\rust-macro-app\\src && cargo run mouse-auto",
+          "time": 0,
+          "loop": 1
         }
       ]
     }

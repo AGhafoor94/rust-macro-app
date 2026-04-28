@@ -1,6 +1,6 @@
 {
   "appName": "Test",
-  "loop": 1250,
+  "loop": 5,
   "description": "",
   "hotkey": "",
   "wordDelay": 5,
@@ -11,6 +11,7 @@
       "appValue": "app",
       "websiteOpen": false,
       "loop": 1,
+      "runOnce": [],
       "steps": [
         {
           "name": "Wait",

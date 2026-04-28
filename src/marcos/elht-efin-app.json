@@ -8,9 +8,10 @@
   "readCsv": "",
   "app": [
     {
-      "appValue": "https://adv-efin6test.elfssharedservices.co.uk:9201/launchpad/applications",
+      "appValue": "",
       "websiteOpen": true,
-      "steps": [
+      "loop": 1,
+      "runOnce": [
         {
           "name": "Wait",
           "code": 999,
@@ -322,7 +323,9 @@
           "sentence": "",
           "time": 1000,
           "loop": 1
-        },
+        }
+      ],
+      "steps": [
         {
           "name": "Sentence",
           "code": 998,

@@ -2,7 +2,6 @@ use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use std::{
-    default,
     env::args,
     fs::{self, DirEntry, File, FileType},
     io::{self, Read},
@@ -41,9 +40,10 @@ struct App {
     app_value: String,
     website_open: bool,
     r#loop: u16,
+    run_once: Vec<Steps>,
     steps: Vec<Steps>,
 }
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct Steps {
     name: String,
@@ -131,7 +131,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap()
         .read_to_string(&mut buffer);
     let data: Macro = serde_json::from_str(&buffer).expect("Not found");
-    let app: Vec<App> = data.app;
+    let app: &Vec<App> = &data.app;
     let log_date: String = format!(
         "{}-{}-{}\n",
         check_for_length_time_and_date(_current_system_time.wDay),
@@ -164,12 +164,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut loops: usize = data.r#loop;
     // let virtual_keys_vec:Vec<u16> = vec![0x5B,0x90,0x91,0x14];
+    let mut run_once_vector_steps: Vec<Steps> = Vec::new();
     let mut hold_keys_vector_steps: Vec<Steps> = Vec::new();
     // let mut hold_keys_vector:Vec<u16> = Vec::new();
     // let _virtual_keys_vector: Vec<u16> = Vec::new();
     let mut _program: String = String::new();
     let mut website: bool = false;
-    let continue_app: bool = true;
+    // let continue_app: bool = true;
     let mut csv_lines: Vec<&str> = vec![];
     let mut _read_csv_file: bool = false;
     let mut buffer_csv_lines: String = String::new();
@@ -194,6 +195,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         loops = buffer_csv_lines.split("\r\n").clone().count();
         csv_lines = buffer_csv_lines.split("\r\n").collect();
         // let _ = csv_lines.remove(0);
+        println!("CSV LINES: {:?}", csv_lines);
         update_log_file(
             &log_file_path,
             format!(
@@ -203,7 +205,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .as_str(),
         );
     }
-
+    // println!("{}", log_date);
+    // if !continue_app {
+    //     std::process::exit(0x000)
+    // }
     if !&data.hotkey.is_empty() {
         // println!("{:?}", data.hotkey.split(','));
         // let split_comma_count = data.hotkey.split(',').count();
@@ -229,53 +234,90 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    for app in app.into_iter() {
+    for app_iter in app.into_iter() {
         update_log_file(
             &log_file_path,
             format!(
                 "Type of app: {} & Number of steps: {}",
-                app.app_value.to_owned(),
-                app.steps.len()
+                &app_iter.app_value.clone(),
+                &app_iter.steps.len()
             )
             .as_str(),
         );
-        if String::eq(&app.app_value, "app") || app.app_value.is_empty() {
-            _program = app.app_value.to_owned();
+        if String::eq(&app_iter.app_value, "app") || app_iter.app_value.is_empty() {
+            _program = app_iter.app_value.to_owned();
+
+            let cloned_app_iter: Vec<Steps> = app_iter.run_once.clone();
+            let app_steps: Vec<Steps> = app_iter.steps.clone();
+            if app_iter.run_once.len() > 0 {
+                let _ = cloned_app_iter
+                    .into_iter()
+                    .for_each(|step| run_once_vector_steps.push(step));
+            }
+            let _ = app_steps
+                .into_iter()
+                .for_each(|step| hold_keys_vector_steps.push(step));
             std::thread::sleep(std::time::Duration::from_millis(250));
         } else {
-            if app.website_open {
-                _program = app.app_value.to_owned();
+            if app_iter.website_open {
+                _program = app_iter.app_value.to_owned();
                 website = true;
 
-                let _ =
-                    execute_command("cmd", &["/C", "start msedge --new-window", &app.app_value]);
+                let _ = execute_command(
+                    "cmd",
+                    &["/C", "start msedge --new-window", &app_iter.app_value],
+                );
 
                 update_log_file(
                     &log_file_path,
-                    format!("Opening Website: {}", &app.app_value).as_str(),
+                    format!("Opening Website: {}", &app_iter.app_value).as_str(),
                 );
                 unsafe {
                     let _ = SetActiveWindow(GetForegroundWindow());
                 }
+                let cloned_app_iter: Vec<Steps> = app_iter.run_once.clone();
+                let app_steps: Vec<Steps> = app_iter.steps.clone();
+                if app_iter.run_once.len() > 0 {
+                    let _ = cloned_app_iter
+                        .into_iter()
+                        .for_each(|step| run_once_vector_steps.push(step));
+                }
+                let _ = app_steps
+                    .into_iter()
+                    .for_each(|step| hold_keys_vector_steps.push(step));
             } else {
-                _program = app.app_value.to_owned();
+                _program = app_iter.app_value.to_owned();
                 let _ = execute_command(
                     "cmd",
-                    &["/C", "start", format!("{}.exe", &app.app_value).as_str()],
+                    &[
+                        "/C",
+                        "start",
+                        format!("{}.exe", &app_iter.app_value).as_str(),
+                    ],
                 );
 
                 update_log_file(
                     &log_file_path,
-                    format!("Opening File: {}.exe", &app.app_value).as_str(),
+                    format!("Opening File: {}.exe", &app_iter.app_value).as_str(),
                 );
+
+                // Add function for single step at top
+
+                let cloned_app_iter: Vec<Steps> = app_iter.run_once.clone();
+                let app_steps: Vec<Steps> = app_iter.steps.clone();
+                if app_iter.run_once.len() > 0 {
+                    let _ = cloned_app_iter
+                        .into_iter()
+                        .for_each(|step| run_once_vector_steps.push(step));
+                }
+                let _ = app_steps
+                    .into_iter()
+                    .for_each(|step| hold_keys_vector_steps.push(step));
             }
-            std::thread::sleep(std::time::Duration::from_millis(250));
+            std::thread::sleep(std::time::Duration::from_millis(1000));
         }
-        let _ = app
-            .steps
-            .into_iter()
-            .for_each(|step| hold_keys_vector_steps.push(step));
     }
+    let run_once_length: usize = run_once_vector_steps.len();
     let mut _current_window: HWND = HWND {
         ..Default::default()
     };
@@ -289,8 +331,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::thread::sleep(std::time::Duration::from_millis(500));
     // let _ = SetForegroundWindow(_current_window);
     // if _result_window_text.to_lowercase().contains("login") {}
-
-    let _mouse_movements: Vec<Steps> = Vec::new();
     for i in 0..loops {
         // if _current_system_time.wHour > 14 {
         //     unsafe {
@@ -348,344 +388,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
-        let mut _current_csv_index: usize = 0;
-        for (_, key) in hold_keys_vector_steps.iter().enumerate() {
-            for _ in 0..key.r#loop {
-                // println!("{}", j);
-                // std::thread::sleep(std::time::Duration::from_millis(1));
-                let result_window_title_main: String =
-                    get_current_window_heading_text(&log_file_path);
-
-                println!("RESULT MAIN: {:?}", result_window_title_main);
-
-                if key.held && key.code < 800 {
-                    // Key hold for keyboard
-                    update_log_file(
-                        &log_file_path,
-                        format!("Holding Key: {}", key.name).as_str(),
-                    );
-                    send_input_messages(key.code, false, true)
-                    // holding_keys_to_release.push(key.code)
-                } else if key.code == 987 {
-                    // Command execute
-                    update_log_file(
-                        &log_file_path,
-                        format!("Running Command: ({})", &key.sentence).as_str(),
-                    );
-                    let output: Result<Output, io::Error> =
-                        execute_command(&key.name, &["/C", &key.sentence]);
-                    println!("{:?}", output);
-                    match output {
-                        Ok(o) => update_log_file(
-                            &log_file_path,
-                            format!(
-                                "Command Output: {:?}. Command Status: {}",
-                                str::from_utf8(&o.stdout),
-                                &o.status
-                            )
-                            .as_str(),
-                        ),
-                        Err(e) => update_log_file(
-                            &log_file_path,
-                            format!("Error Running Command: {}, Sentence: {}", e, &key.sentence)
-                                .as_str(),
-                        ),
-                    }
-                } else if key.code > 800 && key.code < 850 {
-                    // Mouse events
-                    mouse_input(key, &log_file_path);
-                } else if key.code == 999 {
-                    // Wait
-                    update_log_file(
-                        &log_file_path,
-                        format!("Waiting for: {} seconds", key.time).as_str(),
-                    );
-                    std::thread::sleep(std::time::Duration::from_millis(key.time.into()))
-                } else if key.code == 998 || key.code == 997 || key.code == 996 || key.code == 995 {
-                    /*
-                        998 = Normal sentence
-                        997 = Base 64 string convert
-                        996 = Get Caret Postition & JavaScript
-                        995 = Add Strings from CSV based on num in sentence
-                    */
-                    if key.code == 995 {
-                        if _read_csv_file {
-                            if i == csv_lines.iter().count() {
-                                return Ok(());
-                            }
-                            let _csv_string_array: Vec<&str> = csv_lines[i].split(",").collect();
-                            // let _ = _csv_string_array.remove(0);
-                            let code_to_check_csv: usize = _csv_string_array.iter().count();
-
-                            // let mut _csv_string_array:Vec<&str> = vec![];
-                            /*
-                                {
-                                    "name":"Sentence",
-                                    "code": 995,
-                                    "sentence": "1",
-                                    "held": false,
-                                    "time": 0,
-                                    "loop": 1
-                                }
-
-                                potentially works. parses sentence as index of csv line
-                            */
-                            if _csv_string_array.iter().count() == 1 {
-                                return Ok(());
-                            } else {
-                                println!("Code to check CSV: {:?}, current index {}, csv lines count: {}",_csv_string_array, i, csv_lines.iter().count());
-                                update_log_file(
-                                    &log_file_path,
-                                    format!(
-                                        "Getting item in csv data: \"{}\", Sentence: {}, Key Name: {}, Key Code: {}",
-                                        _csv_string_array[_current_csv_index], &key.sentence, &key.name, &key.code
-                                    )
-                                    .as_str(),
-                                );
-                                add_sentence(
-                                    _csv_string_array[_current_csv_index],
-                                    &key.code,
-                                    &keys_json,
-                                    &log_file_path,
-                                    data.word_delay,
-                                );
-                                if code_to_check_csv == _current_csv_index {
-                                    _current_csv_index = 0;
-                                } else {
-                                    _current_csv_index += 1;
-                                }
-                            }
-                        }
-                    } else {
-                        if key.code != 997 {
-                            update_log_file(
-                                &log_file_path,
-                                format!(
-                                    "Adding sentence: \"{}\", Key Name: {}, Key Code: {}",
-                                    &key.sentence, &key.name, &key.code
-                                )
-                                .as_str(),
-                            );
-                        } else {
-                            update_log_file(
-                                &log_file_path,
-                                format!(
-                                    "Adding sentence, Key Name: {}, Key Code: {}",
-                                    &key.name, &key.code
-                                )
-                                .as_str(),
-                            );
-                        }
-                        add_sentence(
-                            &key.sentence,
-                            &key.code,
-                            &keys_json,
-                            &log_file_path,
-                            data.word_delay,
-                        );
-                    }
-                } else if key.code == 994 {
-                    let mut get_current_window_text_for_loop: String =
-                        get_current_window_heading_text(&log_file_path);
-                    if key.name.contains("Check") {
-                        println!("CHECK CONDITION");
-                        update_log_file(
-                            &log_file_path,
-                            format!(
-                                "Starting Current Loop to try and find Title: {}. TIME STARTED: {}:{}:{}",
-                                key.sentence,
-                                _current_system_time.wMinute,
-                                _current_system_time.wSecond,
-                                _current_system_time.wMilliseconds
-                            )
-                            .as_str(),
-                        );
-                        loop {
-                            std::thread::sleep(std::time::Duration::from_millis(500));
-                            get_current_window_text_for_loop =
-                                get_current_window_heading_text(&log_file_path);
-                            println!(
-                                "SLEEPING: {}, SENTENCE: {}",
-                                get_current_window_text_for_loop, key.sentence
-                            );
-                            if get_current_window_text_for_loop.contains(key.sentence.as_str()) {
-                                println!("CURRENT WINDOW: {}", get_current_window_text_for_loop);
-                                break;
-                            }
-                        }
-                    }
-                    if key.name.contains("Skip") {
-                        get_current_window_text_for_loop =
-                            get_current_window_heading_text(&log_file_path);
-                        let split_key_name_by_hyphen: Vec<&str> = key.name.split("-").collect();
-                        println!(
-                            "HITTING SKIP {}, SENTENCE: {} SPLIT {}, NAME: {}",
-                            key.name,
-                            key.sentence,
-                            split_key_name_by_hyphen[1],
-                            get_current_window_text_for_loop
-                        );
-                        if get_current_window_text_for_loop.contains(split_key_name_by_hyphen[1])
-                            || get_current_window_text_for_loop.to_lowercase().trim()
-                                == split_key_name_by_hyphen[1].to_lowercase().trim()
-                        {
-                            println!("HIT HERE {}", get_current_window_text_for_loop);
-                            let sentence_key_split_new_line: Vec<&str> =
-                                key.sentence.split("\n").collect();
-                            let key_code_in_sentence: usize =
-                                sentence_key_split_new_line.iter().count();
-                            let mut keys_loop_press_vec: Vec<u16> = vec![];
-
-                            for key in 0..key_code_in_sentence {
-                                let strings_keys_split_by_hyphen: Vec<&str> =
-                                    sentence_key_split_new_line[key].split("-").collect();
-
-                                println!(
-                                    "{}, {}",
-                                    strings_keys_split_by_hyphen[0]
-                                        .trim()
-                                        .parse::<u16>()
-                                        .unwrap(),
-                                    strings_keys_split_by_hyphen[1]
-                                        .trim()
-                                        .parse::<u16>()
-                                        .unwrap()
-                                );
-                                for _ in 0..strings_keys_split_by_hyphen[1]
-                                    .trim()
-                                    .parse::<u16>()
-                                    .unwrap()
-                                {
-                                    keys_loop_press_vec.push(
-                                        strings_keys_split_by_hyphen[0]
-                                            .trim()
-                                            .parse::<u16>()
-                                            .unwrap(),
-                                    );
-                                }
-                            }
-                            println!("keys_loop_press_vec {:?}", keys_loop_press_vec);
-                            for key_in_loop_skip in keys_loop_press_vec {
-                                std::thread::sleep(std::time::Duration::from_millis(500));
-                                send_input_messages(key_in_loop_skip, true, true);
-                            }
-                        }
-                    } else if key.name.contains("Log") && result_window_title_main.contains("Log") {
-                        send_input_messages(162, false, true);
-                        send_input_messages(160, false, true);
-                        send_input_messages(74, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(162, true, true);
-                        send_input_messages(160, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        add_sentence(
-                            &key.sentence,
-                            &key.code,
-                            &keys_json,
-                            &log_file_path,
-                            data.word_delay,
-                        );
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(13, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(162, false, true);
-                        send_input_messages(160, false, true);
-                        send_input_messages(74, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(162, true, true);
-                        send_input_messages(160, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000))
-                    } else if key.name.contains("Log") && !result_window_title_main.contains("Log")
-                        || !result_window_title_main.contains(&key.name)
-                    {
-                        println!("Not Current Screen")
-                    } else {
-                        println!(
-                            "660:- RESULT TITLE: {:?}, sentence {}",
-                            result_window_title_main, &key.sentence
-                        );
-                        send_input_messages(162, false, true);
-                        send_input_messages(160, false, true);
-                        send_input_messages(74, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(162, true, true);
-                        send_input_messages(160, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        add_sentence(
-                            &key.sentence,
-                            &key.code,
-                            &keys_json,
-                            &log_file_path,
-                            data.word_delay,
-                        );
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(13, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(2000));
-                        send_input_messages(162, false, true);
-                        send_input_messages(160, false, true);
-                        send_input_messages(74, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(162, true, true);
-                        send_input_messages(160, true, true)
-                    }
-                } else if key.code == 993 {
-                    // Clipboard
-                    unsafe {
-                        let clipboard: Result<(), windows::core::Error> = OpenClipboard(None);
-                        match clipboard {
-                            Err(e) => update_log_file(
-                                &log_file_path,
-                                format!("Error opening Clipboard: {}", e).as_str(),
-                            ),
-                            Ok(_) => {
-                                let _ = SetClipboardData(0x001, None);
-                                let clipboard_data = GetClipboardData(0x001);
-                                println!("{:?}", clipboard_data);
-                                let _ = CloseClipboard();
-                            }
-                        }
-                    }
-                } else if key.code == 992 {
-                    // login exit
-                    std::thread::sleep(std::time::Duration::from_millis(2500));
-                    let result_window_title: String =
-                        get_current_window_heading_text(&log_file_path);
-                    if result_window_title.contains(&key.name) {
-                        update_log_file(
-                            &log_file_path,
-                            format!("On Page, exited, {}", &key.name).as_str(),
-                        );
-                        std::process::exit(0x000)
-                    } else {
-                        continue;
-                    }
-                } else {
-                    update_log_file(
-                        &log_file_path,
-                        format!("Pressing key: {} with code: {}", key.name, key.code).as_str(),
-                    );
-                    send_input_messages(key.code, true, true)
-                }
-            }
+        if run_once_length > 0 as usize {
+            run_only_steps(
+                &run_once_vector_steps,
+                &log_file_path,
+                _current_system_time,
+                &_program,
+                &_result_window_text,
+                _read_csv_file,
+                &csv_lines,
+                &keys_json,
+                &data,
+                1,
+            );
         }
 
-        unsafe {
-            _current_system_time = GetLocalTime();
-        }
-        update_log_file(
+        run_only_steps(
+            &hold_keys_vector_steps,
             &log_file_path,
-            format!(
-                "Ended Current Loop Iteration: {} of {}. TIME ENDED THIS LOOP: {}:{}:{}\n",
-                (i + 1),
-                loops,
-                _current_system_time.wMinute,
-                _current_system_time.wSecond,
-                _current_system_time.wMilliseconds
-            )
-            .as_str(),
+            _current_system_time,
+            &_program,
+            &_result_window_text,
+            _read_csv_file,
+            &csv_lines,
+            &keys_json,
+            &data,
+            data.app[0].r#loop as usize,
         );
-        std::thread::sleep(std::time::Duration::from_millis(data.delay_for_each_loop));
     }
+
     update_log_file(&log_file_path, "Ended Macro\n\n");
     Ok(())
     // std::process::exit(0x000)
@@ -917,7 +648,7 @@ fn send_mouse_input_message(
     unsafe {
         let _ = GetCursorPos(&mut point_struct);
         _system_metrics_x = GetSystemMetrics(SM_CXSCREEN);
-        _system_metrics_y = GetSystemMetrics(SM_CYSCREEN)
+        _system_metrics_y = GetSystemMetrics(SM_CYSCREEN);
     }
     match move_mouse {
         true => {
@@ -936,7 +667,7 @@ fn send_mouse_input_message(
                             },
                         },
                     };
-                    // let _ = SendInput(&[_input_mouse_struct],core::mem::size_of::<INPUT>() as i32);
+                    // let _ = SendInput(&[_input_mouse_struct],core::mem::size_of::<INPUT>() a     s i32);
                     _input_mouse_struct = INPUT {
                         r#type: INPUT_TYPE(0),
                         Anonymous: INPUT_0 {
@@ -1295,7 +1026,6 @@ fn get_current_window_heading_text(log_file_path: &str) -> String {
     );
     result_window_text
 }
-
 fn mouse_input(key: &Steps, log_file_path: &str) {
     // std::thread::sleep(std::time::Duration::from_millis(100));
     match &key.code {
@@ -1342,4 +1072,776 @@ fn mouse_input(key: &Steps, log_file_path: &str) {
         _ => return,
     }
     // std::thread::sleep(std::time::Duration::from_millis(100));
+}
+fn run_steps(
+    loops: usize,
+    hold_keys_vector_steps: Vec<Steps>,
+    log_file_path: &str,
+    mut _current_system_time: SYSTEMTIME,
+    website: bool,
+    mut _program: String,
+    mut _result_window_text: String,
+    _read_csv_file: bool,
+    csv_lines: Vec<&str>,
+    keys_json: &Keys,
+    data: &Macro,
+    run_steps_number: usize,
+) {
+    let _mouse_movements: Vec<Steps> = Vec::new();
+    for i in 0..loops {
+        // if _current_system_time.wHour > 14 {
+        //     unsafe {
+        //         let _ = LockWorkStation();
+        //         std::process::exit(0x000)
+        //         // let _ = InitiateSystemShutdownA(None,None,0,true, false);
+        //         // let _ = InitiateShutdownA(None,None,0,SHUTDOWN_FORCE_OTHERS|SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED);
+        //     }
+        // }
+        if get_key_state(162) && get_key_state(91) {
+            std::process::exit(0x000)
+        }
+        unsafe {
+            _current_system_time = GetLocalTime();
+        }
+        update_log_file(
+            &log_file_path,
+            format!(
+                "Starting Current Loop Iteration: {} of {}. TIME STARTED: {}:{}:{}",
+                (i + 1),
+                loops,
+                _current_system_time.wMinute,
+                _current_system_time.wSecond,
+                _current_system_time.wMilliseconds
+            )
+            .as_str(),
+        );
+        if i > 0 {
+            if website {
+                // let _ = execute_command(
+                //     "cmd",
+                //     &["/C", "start msedge --new-window -incognito", &_program],
+                // );
+                // let _ = execute_command(
+                //     "cmd",
+                //     &["/C", "start msedge --new-window -inprivate", &_program],
+                // );
+                let _ = execute_command("cmd", &["/C", "start msedge --new-window", &_program]);
+                _result_window_text = get_current_window_heading_text(&log_file_path);
+                update_log_file(
+                    &log_file_path,
+                    format!("Opening Website: {}", &_program).as_str(),
+                );
+            } else {
+                if !String::eq(&_program, "app") {
+                    let _ = execute_command(
+                        "cmd",
+                        &["/C", "start", format!("{}.exe", &_program).as_str()],
+                    );
+                    update_log_file(
+                        &log_file_path,
+                        format!("Opening Website: {}.exe", &_program).as_str(),
+                    );
+                    _result_window_text = get_current_window_heading_text(&log_file_path);
+                }
+            }
+        }
+        let mut _current_csv_index: usize = 0;
+        for _ in 0..run_steps_number {
+            for (_, key) in hold_keys_vector_steps.iter().enumerate() {
+                for _ in 0..key.r#loop {
+                    // println!("{}", j);
+                    // std::thread::sleep(std::time::Duration::from_millis(1));
+                    let result_window_title_main: String =
+                        get_current_window_heading_text(&log_file_path);
+                    unsafe {
+                        let _system_metrics_x: i32 = GetSystemMetrics(SM_CXSCREEN);
+                        let _system_metrics_y: i32 = GetSystemMetrics(SM_CYSCREEN);
+                        println!(
+                            "System Metrics: {} x {}",
+                            _system_metrics_x, _system_metrics_y
+                        );
+                    }
+                    println!("RESULT MAIN: {:?}", result_window_title_main);
+
+                    if key.held && key.code < 800 {
+                        // Key hold for keyboard
+                        update_log_file(
+                            &log_file_path,
+                            format!("Holding Key: {}", key.name).as_str(),
+                        );
+                        send_input_messages(key.code, false, true)
+                        // holding_keys_to_release.push(key.code)
+                    } else if key.code == 987 {
+                        // Command execute
+                        update_log_file(
+                            &log_file_path,
+                            format!("Running Command: ({})", &key.sentence).as_str(),
+                        );
+                        let output: Result<Output, io::Error> =
+                            execute_command("cmd", &["/C", &key.sentence]);
+                        println!("{:?}", output);
+                        match output {
+                            Ok(o) => update_log_file(
+                                &log_file_path,
+                                format!(
+                                    "Command Output: {:?}. Command Status: {}",
+                                    str::from_utf8(&o.stdout),
+                                    &o.status
+                                )
+                                .as_str(),
+                            ),
+                            Err(e) => update_log_file(
+                                &log_file_path,
+                                format!(
+                                    "Error Running Command: {}, Sentence: {}",
+                                    e, &key.sentence
+                                )
+                                .as_str(),
+                            ),
+                        }
+                    } else if key.code > 800 && key.code < 850 {
+                        // Mouse events
+                        mouse_input(key, &log_file_path);
+                    } else if key.code == 999 {
+                        // Wait
+                        update_log_file(
+                            &log_file_path,
+                            format!("Waiting for: {} seconds", key.time).as_str(),
+                        );
+                        std::thread::sleep(std::time::Duration::from_millis(key.time.into()))
+                    } else if key.code == 998
+                        || key.code == 997
+                        || key.code == 996
+                        || key.code == 995
+                    {
+                        /*
+                            998 = Normal sentence
+                            997 = Base 64 string convert
+                            996 = Get Caret Postition & JavaScript
+                            995 = Add Strings from CSV based on num in sentence
+                        */
+                        if key.code == 995 {
+                            if _read_csv_file {
+                                if i == csv_lines.iter().count() {
+                                    return;
+                                }
+                                let _csv_string_array: Vec<&str> =
+                                    csv_lines[i].split(",").collect();
+                                // let _ = _csv_string_array.remove(0);
+                                let code_to_check_csv: usize = _csv_string_array.iter().count();
+
+                                // let mut _csv_string_array:Vec<&str> = vec![];
+                                /*
+                                    {
+                                        "name":"Sentence",
+                                        "code": 995,
+                                        "sentence": "1",
+                                        "held": false,
+                                        "time": 0,
+                                        "loop": 1
+                                    }
+
+                                    potentially works. parses sentence as index of csv line
+                                */
+                                if _csv_string_array.iter().count() == 1 {
+                                    return;
+                                } else {
+                                    println!("Code to check CSV: {:?}, current index {}, csv lines count: {}",_csv_string_array, i, csv_lines.iter().count());
+                                    update_log_file(
+                                    &log_file_path,
+                                    format!(
+                                        "Getting item in csv data: \"{}\", Sentence: {}, Key Name: {}, Key Code: {}",
+                                        _csv_string_array[_current_csv_index], &key.sentence, &key.name, &key.code
+                                    )
+                                    .as_str(),
+                                );
+                                    add_sentence(
+                                        _csv_string_array[_current_csv_index],
+                                        &key.code,
+                                        &keys_json,
+                                        &log_file_path,
+                                        data.word_delay,
+                                    );
+                                    if code_to_check_csv == _current_csv_index {
+                                        _current_csv_index = 0;
+                                    } else {
+                                        _current_csv_index += 1;
+                                    }
+                                }
+                            }
+                        } else {
+                            if key.code != 997 {
+                                update_log_file(
+                                    &log_file_path,
+                                    format!(
+                                        "Adding sentence: \"{}\", Key Name: {}, Key Code: {}",
+                                        &key.sentence, &key.name, &key.code
+                                    )
+                                    .as_str(),
+                                );
+                            } else {
+                                update_log_file(
+                                    &log_file_path,
+                                    format!(
+                                        "Adding sentence, Key Name: {}, Key Code: {}",
+                                        &key.name, &key.code
+                                    )
+                                    .as_str(),
+                                );
+                            }
+                            add_sentence(
+                                &key.sentence,
+                                &key.code,
+                                &keys_json,
+                                &log_file_path,
+                                data.word_delay,
+                            );
+                        }
+                    } else if key.code == 994 {
+                        // Window Title
+                        let mut get_current_window_text_for_loop: String =
+                            get_current_window_heading_text(&log_file_path);
+                        if key.name.contains("Check") {
+                            println!("CHECK CONDITION");
+                            update_log_file(
+                            &log_file_path,
+                            format!(
+                                "Starting Current Loop to try and find Title: {}. TIME STARTED: {}:{}:{}",
+                                key.sentence,
+                                _current_system_time.wMinute,
+                                _current_system_time.wSecond,
+                                _current_system_time.wMilliseconds
+                            )
+                            .as_str(),
+                        );
+                            let mut time_out: u32 = 0;
+                            loop {
+                                std::thread::sleep(std::time::Duration::from_millis(500));
+                                get_current_window_text_for_loop =
+                                    get_current_window_heading_text(&log_file_path);
+                                println!(
+                                    "SLEEPING: {}, SENTENCE: {}",
+                                    get_current_window_text_for_loop, key.sentence
+                                );
+                                time_out += 500;
+                                println!("LOOP TIME OUT: {}", time_out);
+                                if time_out > 20000 {
+                                    println!("Timed out");
+                                    std::process::exit(0x000)
+                                }
+                                if get_current_window_text_for_loop.contains(key.sentence.as_str())
+                                {
+                                    println!(
+                                        "CURRENT WINDOW: {}",
+                                        get_current_window_text_for_loop
+                                    );
+                                    break;
+                                }
+                            }
+                        }
+                        if key.name.contains("Skip") {
+                            get_current_window_text_for_loop =
+                                get_current_window_heading_text(&log_file_path);
+                            let split_key_name_by_hyphen: Vec<&str> = key.name.split("-").collect();
+                            println!(
+                                "HITTING SKIP {}, SENTENCE: {} SPLIT {}, NAME: {}",
+                                key.name,
+                                key.sentence,
+                                split_key_name_by_hyphen[1],
+                                get_current_window_text_for_loop
+                            );
+                            if get_current_window_text_for_loop
+                                .contains(split_key_name_by_hyphen[1])
+                                || get_current_window_text_for_loop.to_lowercase().trim()
+                                    == split_key_name_by_hyphen[1].to_lowercase().trim()
+                            {
+                                let sentence_key_split_new_line: Vec<&str> =
+                                    key.sentence.split("\n").collect();
+                                let key_code_in_sentence: usize =
+                                    sentence_key_split_new_line.iter().count();
+                                let mut keys_loop_press_vec: Vec<u16> = vec![];
+
+                                for key in 0..key_code_in_sentence {
+                                    let strings_keys_split_by_hyphen: Vec<&str> =
+                                        sentence_key_split_new_line[key].split("-").collect();
+
+                                    println!(
+                                        "{}, {}",
+                                        strings_keys_split_by_hyphen[0]
+                                            .trim()
+                                            .parse::<u16>()
+                                            .unwrap(),
+                                        strings_keys_split_by_hyphen[1]
+                                            .trim()
+                                            .parse::<u16>()
+                                            .unwrap()
+                                    );
+                                    for _ in 0..strings_keys_split_by_hyphen[1]
+                                        .trim()
+                                        .parse::<u16>()
+                                        .unwrap()
+                                    {
+                                        keys_loop_press_vec.push(
+                                            strings_keys_split_by_hyphen[0]
+                                                .trim()
+                                                .parse::<u16>()
+                                                .unwrap(),
+                                        );
+                                    }
+                                }
+                                println!("keys_loop_press_vec {:?}", keys_loop_press_vec);
+                                for key_in_loop_skip in keys_loop_press_vec {
+                                    std::thread::sleep(std::time::Duration::from_millis(500));
+                                    send_input_messages(key_in_loop_skip, true, true);
+                                }
+                            }
+                        }
+                        if key.name.contains("Log") && result_window_title_main.contains("Log") {
+                            send_input_messages(162, false, true);
+                            send_input_messages(160, false, true);
+                            send_input_messages(74, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            send_input_messages(162, true, true);
+                            send_input_messages(160, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            add_sentence(
+                                &key.sentence,
+                                &key.code,
+                                &keys_json,
+                                &log_file_path,
+                                data.word_delay,
+                            );
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            send_input_messages(13, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            send_input_messages(162, false, true);
+                            send_input_messages(160, false, true);
+                            send_input_messages(74, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            send_input_messages(162, true, true);
+                            send_input_messages(160, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000))
+                        }
+                        if key.name.contains("Log") && !result_window_title_main.contains("Log")
+                            || !result_window_title_main.contains(&key.name)
+                        {
+                            println!("Not Current Screen")
+                        } else {
+                            println!(
+                                "660:- RESULT TITLE: {:?}, sentence {}",
+                                result_window_title_main, &key.sentence
+                            );
+                            send_input_messages(162, false, true);
+                            send_input_messages(160, false, true);
+                            send_input_messages(74, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            send_input_messages(162, true, true);
+                            send_input_messages(160, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            add_sentence(
+                                &key.sentence,
+                                &key.code,
+                                &keys_json,
+                                &log_file_path,
+                                data.word_delay,
+                            );
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            send_input_messages(13, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(2000));
+                            send_input_messages(162, false, true);
+                            send_input_messages(160, false, true);
+                            send_input_messages(74, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            send_input_messages(162, true, true);
+                            send_input_messages(160, true, true)
+                        }
+                    } else if key.code == 993 {
+                        // Clipboard
+                        unsafe {
+                            let clipboard: Result<(), windows::core::Error> = OpenClipboard(None);
+                            match clipboard {
+                                Err(e) => update_log_file(
+                                    &log_file_path,
+                                    format!("Error opening Clipboard: {}", e).as_str(),
+                                ),
+                                Ok(_) => {
+                                    let _ = SetClipboardData(0x001, None);
+                                    let clipboard_data = GetClipboardData(0x001);
+                                    println!("{:?}", clipboard_data);
+                                    let _ = CloseClipboard();
+                                }
+                            }
+                        }
+                    } else if key.code == 992 {
+                        // login exit
+                        std::thread::sleep(std::time::Duration::from_millis(2500));
+                        let result_window_title: String =
+                            get_current_window_heading_text(&log_file_path);
+                        if result_window_title.contains(&key.name) {
+                            update_log_file(
+                                &log_file_path,
+                                format!("On Page, exited, {}", &key.name).as_str(),
+                            );
+                            std::process::exit(0x000)
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        update_log_file(
+                            &log_file_path,
+                            format!("Pressing key: {} with code: {}", key.name, key.code).as_str(),
+                        );
+                        send_input_messages(key.code, true, true)
+                    }
+                }
+            }
+        }
+
+        unsafe {
+            _current_system_time = GetLocalTime();
+        }
+        update_log_file(
+            &log_file_path,
+            format!(
+                "Ended Current Loop Iteration: {} of {}. TIME ENDED THIS LOOP: {}:{}:{}\n",
+                (i + 1),
+                loops,
+                _current_system_time.wMinute,
+                _current_system_time.wSecond,
+                _current_system_time.wMilliseconds
+            )
+            .as_str(),
+        );
+        std::thread::sleep(std::time::Duration::from_millis(data.delay_for_each_loop));
+    }
+}
+fn run_only_steps(
+    steps_vec: &Vec<Steps>,
+    log_file_path: &str,
+    mut _current_system_time: SYSTEMTIME,
+    mut _program: &String,
+    mut _result_window_text: &String,
+    _read_csv_file: bool,
+    csv_lines: &Vec<&str>,
+    keys_json: &Keys,
+    data: &Macro,
+    run_steps_number: usize,
+) {
+    let _mouse_movements: Vec<Steps> = Vec::new();
+    let mut _current_csv_index: usize = 0;
+    for i in 0..run_steps_number {
+        for (_, key) in steps_vec.iter().enumerate() {
+            for _ in 0..key.r#loop {
+                // println!("{}", j);
+                // std::thread::sleep(std::time::Duration::from_millis(1));
+                let result_window_title_main: String =
+                    get_current_window_heading_text(&log_file_path);
+                unsafe {
+                    let _system_metrics_x: i32 = GetSystemMetrics(SM_CXSCREEN);
+                    let _system_metrics_y: i32 = GetSystemMetrics(SM_CYSCREEN);
+                    println!(
+                        "System Metrics: {} x {}",
+                        _system_metrics_x, _system_metrics_y
+                    );
+                }
+                println!("RESULT MAIN: {:?}", result_window_title_main);
+
+                if key.held && key.code < 800 {
+                    // Key hold for keyboard
+                    update_log_file(
+                        &log_file_path,
+                        format!("Holding Key: {}", key.name).as_str(),
+                    );
+                    send_input_messages(key.code, false, true)
+                    // holding_keys_to_release.push(key.code)
+                } else if key.code == 987 {
+                    // Command execute
+                    update_log_file(
+                        &log_file_path,
+                        format!("Running Command: ({})", &key.sentence).as_str(),
+                    );
+                    let output: Result<Output, io::Error> =
+                        execute_command("cmd", &["/C", &key.sentence]);
+                    println!("{:?}", output);
+                    match output {
+                        Ok(o) => update_log_file(
+                            &log_file_path,
+                            format!(
+                                "Command Output: {:?}. Command Status: {}",
+                                str::from_utf8(&o.stdout),
+                                &o.status
+                            )
+                            .as_str(),
+                        ),
+                        Err(e) => update_log_file(
+                            &log_file_path,
+                            format!("Error Running Command: {}, Sentence: {}", e, &key.sentence)
+                                .as_str(),
+                        ),
+                    }
+                } else if key.code > 800 && key.code < 850 {
+                    // Mouse events
+                    mouse_input(key, &log_file_path);
+                } else if key.code == 999 {
+                    // Wait
+                    update_log_file(
+                        &log_file_path,
+                        format!("Waiting for: {} seconds", key.time).as_str(),
+                    );
+                    std::thread::sleep(std::time::Duration::from_millis(key.time.into()))
+                } else if key.code == 998 || key.code == 997 || key.code == 996 || key.code == 995 {
+                    /*
+                        998 = Normal sentence
+                        997 = Base 64 string convert
+                        996 = Get Caret Postition & JavaScript
+                        995 = Add Strings from CSV based on num in sentence
+                    */
+                    if key.code == 995 {
+                        if _read_csv_file {
+                            if i == csv_lines.iter().count() {
+                                return;
+                            }
+                            let _csv_string_array: Vec<&str> = csv_lines[i].split(",").collect();
+                            // let _ = _csv_string_array.remove(0);
+                            let code_to_check_csv: usize = _csv_string_array.iter().count();
+
+                            // let mut _csv_string_array:Vec<&str> = vec![];
+                            /*
+                                {
+                                    "name":"Sentence",
+                                    "code": 995,
+                                    "sentence": "1",
+                                    "held": false,
+                                    "time": 0,
+                                    "loop": 1
+                                }
+
+                                potentially works. parses sentence as index of csv line
+                            */
+                            if _csv_string_array.iter().count() == 1 {
+                                return;
+                            } else {
+                                println!("Code to check CSV: {:?}, current index {}, csv lines count: {}",_csv_string_array, i, csv_lines.iter().count());
+                                update_log_file(
+                                    &log_file_path,
+                                    format!(
+                                        "Getting item in csv data: \"{}\", Sentence: {}, Key Name: {}, Key Code: {}",
+                                        _csv_string_array[_current_csv_index], &key.sentence, &key.name, &key.code
+                                    )
+                                    .as_str(),
+                                );
+                                add_sentence(
+                                    _csv_string_array[_current_csv_index],
+                                    &key.code,
+                                    &keys_json,
+                                    &log_file_path,
+                                    data.word_delay,
+                                );
+                                if code_to_check_csv == _current_csv_index {
+                                    _current_csv_index = 0;
+                                } else {
+                                    _current_csv_index += 1;
+                                }
+                            }
+                        }
+                    } else {
+                    }
+                } else if key.code == 994 {
+                    // Window Title
+                    let mut get_current_window_text_for_loop: String =
+                        get_current_window_heading_text(&log_file_path);
+                    if key.name.contains("Check") {
+                        println!("CHECK CONDITION");
+                        update_log_file(
+                            &log_file_path,
+                            format!(
+                                "Starting Current Loop to try and find Title: {}. TIME STARTED: {}:{}:{}",
+                                key.sentence,
+                                _current_system_time.wMinute,
+                                _current_system_time.wSecond,
+                                _current_system_time.wMilliseconds
+                            )
+                            .as_str(),
+                        );
+                        let mut time_out: u32 = 0;
+                        loop {
+                            std::thread::sleep(std::time::Duration::from_millis(500));
+                            get_current_window_text_for_loop =
+                                get_current_window_heading_text(&log_file_path);
+                            println!(
+                                "SLEEPING: {}, SENTENCE: {}",
+                                get_current_window_text_for_loop, key.sentence
+                            );
+                            time_out += 500;
+                            println!("LOOP TIME OUT: {}", time_out);
+                            if time_out > 20000 {
+                                println!("Timed out");
+                                std::process::exit(0x000)
+                            }
+                            if get_current_window_text_for_loop.contains(key.sentence.as_str()) {
+                                println!("CURRENT WINDOW: {}", get_current_window_text_for_loop);
+                                break;
+                            }
+                        }
+                    }
+                    if key.name.contains("Skip") {
+                        get_current_window_text_for_loop =
+                            get_current_window_heading_text(&log_file_path);
+                        let split_key_name_by_hyphen: Vec<&str> = key.name.split("-").collect();
+                        println!(
+                            "HITTING SKIP {}, SENTENCE: {} SPLIT {}, NAME: {}",
+                            key.name,
+                            key.sentence,
+                            split_key_name_by_hyphen[1],
+                            get_current_window_text_for_loop
+                        );
+                        if get_current_window_text_for_loop.contains(split_key_name_by_hyphen[1])
+                            || get_current_window_text_for_loop.to_lowercase().trim()
+                                == split_key_name_by_hyphen[1].to_lowercase().trim()
+                        {
+                            let sentence_key_split_new_line: Vec<&str> =
+                                key.sentence.split("\n").collect();
+                            let key_code_in_sentence: usize =
+                                sentence_key_split_new_line.iter().count();
+                            let mut keys_loop_press_vec: Vec<u16> = vec![];
+
+                            for key in 0..key_code_in_sentence {
+                                let strings_keys_split_by_hyphen: Vec<&str> =
+                                    sentence_key_split_new_line[key].split("-").collect();
+
+                                println!(
+                                    "{}, {}",
+                                    strings_keys_split_by_hyphen[0]
+                                        .trim()
+                                        .parse::<u16>()
+                                        .unwrap(),
+                                    strings_keys_split_by_hyphen[1]
+                                        .trim()
+                                        .parse::<u16>()
+                                        .unwrap()
+                                );
+                                for _ in 0..strings_keys_split_by_hyphen[1]
+                                    .trim()
+                                    .parse::<u16>()
+                                    .unwrap()
+                                {
+                                    keys_loop_press_vec.push(
+                                        strings_keys_split_by_hyphen[0]
+                                            .trim()
+                                            .parse::<u16>()
+                                            .unwrap(),
+                                    );
+                                }
+                            }
+                            println!("keys_loop_press_vec {:?}", keys_loop_press_vec);
+                            for key_in_loop_skip in keys_loop_press_vec {
+                                std::thread::sleep(std::time::Duration::from_millis(500));
+                                send_input_messages(key_in_loop_skip, true, true);
+                            }
+                        }
+                    }
+                    if key.name.contains("Log") && result_window_title_main.contains("Log") {
+                        send_input_messages(162, false, true);
+                        send_input_messages(160, false, true);
+                        send_input_messages(74, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(162, true, true);
+                        send_input_messages(160, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        add_sentence(
+                            &key.sentence,
+                            &key.code,
+                            &keys_json,
+                            &log_file_path,
+                            data.word_delay,
+                        );
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(13, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(162, false, true);
+                        send_input_messages(160, false, true);
+                        send_input_messages(74, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(162, true, true);
+                        send_input_messages(160, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000))
+                    }
+                    if key.name.contains("Log") && !result_window_title_main.contains("Log")
+                        || !result_window_title_main.contains(&key.name)
+                    {
+                        println!("Not Current Screen")
+                    } else {
+                        println!(
+                            "660:- RESULT TITLE: {:?}, sentence {}",
+                            result_window_title_main, &key.sentence
+                        );
+                        send_input_messages(162, false, true);
+                        send_input_messages(160, false, true);
+                        send_input_messages(74, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(162, true, true);
+                        send_input_messages(160, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        add_sentence(
+                            &key.sentence,
+                            &key.code,
+                            &keys_json,
+                            &log_file_path,
+                            data.word_delay,
+                        );
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(13, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(2000));
+                        send_input_messages(162, false, true);
+                        send_input_messages(160, false, true);
+                        send_input_messages(74, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(162, true, true);
+                        send_input_messages(160, true, true)
+                    }
+                } else if key.code == 993 {
+                    // Clipboard
+                    unsafe {
+                        let clipboard: Result<(), windows::core::Error> = OpenClipboard(None);
+                        match clipboard {
+                            Err(e) => update_log_file(
+                                &log_file_path,
+                                format!("Error opening Clipboard: {}", e).as_str(),
+                            ),
+                            Ok(_) => {
+                                let _ = SetClipboardData(0x001, None);
+                                let clipboard_data = GetClipboardData(0x001);
+                                println!("{:?}", clipboard_data);
+                                let _ = CloseClipboard();
+                            }
+                        }
+                    }
+                } else if key.code == 992 {
+                    // login exit
+                    std::thread::sleep(std::time::Duration::from_millis(2500));
+                    let result_window_title: String =
+                        get_current_window_heading_text(&log_file_path);
+                    if result_window_title.contains(&key.name) {
+                        update_log_file(
+                            &log_file_path,
+                            format!("On Page, exited, {}", &key.name).as_str(),
+                        );
+                        std::process::exit(0x000)
+                    } else {
+                        continue;
+                    }
+                } else {
+                    update_log_file(
+                        &log_file_path,
+                        format!("Pressing key: {} with code: {}", key.name, key.code).as_str(),
+                    );
+                    send_input_messages(key.code, true, true)
+                }
+            }
+        }
+    }
+
+    unsafe {
+        _current_system_time = GetLocalTime();
+    }
 }
