@@ -41,6 +41,7 @@ struct App {
     r#loop: u16,
     run_once: Vec<Steps>,
     steps: Vec<Steps>,
+    end_steps: Vec<Steps>,
 }
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -165,6 +166,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // let virtual_keys_vec:Vec<u16> = vec![0x5B,0x90,0x91,0x14];
     let mut run_once_vector_steps: Vec<Steps> = Vec::new();
     let mut hold_keys_vector_steps: Vec<Steps> = Vec::new();
+    let mut end_vector_steps: Vec<Steps> = Vec::new();
     // let mut hold_keys_vector:Vec<u16> = Vec::new();
     // let _virtual_keys_vector: Vec<u16> = Vec::new();
     let mut _program: String = String::new();
@@ -233,12 +235,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     _ => temp_csv_location += "",
                 }
             }
-            let csv_file: Result<File, io::Error> = File::open(&temp_csv_location);
+            let csv_file: io::Result<String> = std::fs::read_to_string(&temp_csv_location);
             println!("READ CSV LINE: {}", &temp_csv_location);
             match csv_file {
                 Ok(v) => {
-                    let mut lines_to_read: io::BufReader<File> = std::io::BufReader::new(v);
-                    let _ = &lines_to_read.read_to_string(&mut buffer_csv_lines);
+                    // File::open below
+                    // let mut lines_to_read: io::BufReader<File> = std::io::BufReader::new(v);
+                    // let _ = &lines_to_read.read_to_string(&mut buffer_csv_lines);
+                    buffer_csv_lines = v;
                 }
                 Err(e) => {
                     update_log_file(
@@ -353,6 +357,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let cloned_app_iter: Vec<Steps> = app_iter.run_once.clone();
             let app_steps: Vec<Steps> = app_iter.steps.clone();
+            let cloned_end_app_iter: Vec<Steps> = app_iter.end_steps.clone();
             if app_iter.run_once.len() > 0 {
                 let _ = cloned_app_iter
                     .into_iter()
@@ -361,6 +366,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let _ = app_steps
                 .into_iter()
                 .for_each(|step| hold_keys_vector_steps.push(step));
+            if app_iter.end_steps.len() > 0 {
+                let _ = cloned_end_app_iter
+                    .into_iter()
+                    .for_each(|step| end_vector_steps.push(step));
+            }
             std::thread::sleep(std::time::Duration::from_millis(250));
         } else {
             if app_iter.website_open {
@@ -381,6 +391,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 let cloned_app_iter: Vec<Steps> = app_iter.run_once.clone();
                 let app_steps: Vec<Steps> = app_iter.steps.clone();
+                let cloned_end_app_iter: Vec<Steps> = app_iter.end_steps.clone();
                 if app_iter.run_once.len() > 0 {
                     let _ = cloned_app_iter
                         .into_iter()
@@ -389,6 +400,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let _ = app_steps
                     .into_iter()
                     .for_each(|step| hold_keys_vector_steps.push(step));
+                if app_iter.end_steps.len() > 0 {
+                    let _ = cloned_end_app_iter
+                        .into_iter()
+                        .for_each(|step| end_vector_steps.push(step));
+                }
             } else {
                 _program = app_iter.app_value.to_owned();
                 let _ = execute_command(
@@ -409,6 +425,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 let cloned_app_iter: Vec<Steps> = app_iter.run_once.clone();
                 let app_steps: Vec<Steps> = app_iter.steps.clone();
+                let cloned_end_app_iter: Vec<Steps> = app_iter.end_steps.clone();
                 if app_iter.run_once.len() > 0 {
                     let _ = cloned_app_iter
                         .into_iter()
@@ -417,11 +434,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let _ = app_steps
                     .into_iter()
                     .for_each(|step| hold_keys_vector_steps.push(step));
+                if app_iter.end_steps.len() > 0 {
+                    let _ = cloned_end_app_iter
+                        .into_iter()
+                        .for_each(|step| end_vector_steps.push(step));
+                }
             }
             std::thread::sleep(std::time::Duration::from_millis(1000));
         }
     }
     let mut run_once_length: usize = run_once_vector_steps.len();
+    let mut end_steps_length: usize = end_vector_steps.len();
     let mut _current_window: HWND = HWND {
         ..Default::default()
     };
@@ -524,6 +547,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             &data,
             csv_lines_loop as usize,
         );
+        if end_steps_length > 0 as usize {
+            run_only_steps(
+                &end_vector_steps,
+                &log_file_path,
+                _current_system_time,
+                &_program,
+                &_result_window_text,
+                _read_csv_file,
+                &csv_lines,
+                &keys_json,
+                &data,
+                1,
+            );
+            end_steps_length = 0;
+        }
         println!("Current Item: {}", i);
     }
 
@@ -1747,11 +1785,10 @@ fn run_only_steps(
                                     .split(",")
                                     .collect();
                                 println!(
-                                    "SPLIT KEY NAME: 1: ({}), 2: ({}): ITEM: {}: INDEX: {}",
-                                    split_key_name_into_int[0],
-                                    split_key_name_into_int[1],
-                                    (split_key_name_into_int[0] as usize) + i,
-                                    i
+                                    "SPLIT KEY NAME: 1: ({:?})",
+                                    _csv_string_array[split_key_name_into_int[1] as usize]
+                                        .to_string()
+                                        .replace("\u{feff}", "")
                                 );
                                 println!("CSV LINES WITH INDEX: {:?}", csv_lines[i]);
                                 update_log_file(
@@ -1763,7 +1800,9 @@ fn run_only_steps(
                                         .as_str(),
                                     );
                                 add_sentence(
-                                    _csv_string_array[split_key_name_into_int[1] as usize],
+                                    _csv_string_array[split_key_name_into_int[1] as usize]
+                                        .replace("\u{feff}", "")
+                                        .as_str(),
                                     &key.code,
                                     &keys_json,
                                     &log_file_path,
@@ -1993,12 +2032,22 @@ fn run_only_steps(
                         // let real_child_window = RealChildWindowFromPoint(GetActiveWindow(), points);
 
                         // let dlg_item: HWND = GetWindow(for_ground_window_test, GW_HWNDLAST);
-                        // let child_window_title: String =
-                        //     get_current_window_heading_text_by_handle(real_child_window);
+
                         // println!("CHILD WINDOW TITLE: {}", child_window_title);
                         let get_child_test_window = GetWindow(GetFocus(), GW_OWNER);
                         let check_child_window = IsChild(GetActiveWindow(), get_child_test_window);
-                        println!("CHILD WINDOW? {:?}", check_child_window);
+                        let top_window: HWND = GetWindow(GetActiveWindow(), GW_CHILD);
+                        let child_window_title: String =
+                            get_current_window_heading_text_by_handle(top_window);
+                        println!("CHILD WINDOW? {:?}", child_window_title);
+                    }
+                    std::process::exit(0x000)
+                } else if key.code == 990 {
+                    unsafe {
+                        println!("CLOSEING WINDOW");
+                        // let _ = CloseWindow(GetForegroundWindow());
+                        // let _ = DestroyWindow(GetForegroundWindow());
+                        let _ = PostMessageA(GetForegroundWindow(), WM_CLOSE, WPARAM(0), LPARAM(0));
                     }
                     std::process::exit(0x000)
                 } else {
