@@ -11,8 +11,7 @@
       "appValue": "app",
       "websiteOpen": false,
       "loop": 1,
-      "runOnce": [],
-      "steps": [
+      "runOnce": [
         {
           "name": "Wait",
           "code": 999,
@@ -100,11 +99,21 @@
           "sentence": "Untitled",
           "time": 0,
           "loop": 1
+        }
+      ],
+      "steps": [
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
         },
         {
           "name": "Sentence",
           "code": 998,
-          "sentence": "1 - TEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\n31 - TEST word with slash n\n",
+          "sentence": "1 - TEST word with slash\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\n\rTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\nTEST word with slash n\n31 - TEST word with slash n\n",
           "held": false,
           "time": 0,
           "loop": 1

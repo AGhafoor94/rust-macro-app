@@ -1,0 +1,52 @@
+{
+  "appName": "EFin Launchpad Start",
+  "loop": 1,
+  "description": "",
+  "hotkey": "",
+  "wordDelay": 10,
+  "delayForEachLoop": 1000,
+  "readCsv": "",
+  "app": [
+    {
+      "appValue": "app",
+      "websiteOpen": false,
+      "loop": 1,
+      "runOnce": [],
+      "steps": [
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 2500,
+          "loop": 1
+        },
+        {
+          "name": "Enum Child Windows",
+          "code": 991,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 2500,
+          "loop": 1
+        },
+        {
+          "name": "Mouse move",
+          "code": 804,
+          "sentence": "460,228",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        }
+      ],
+      "endSteps": []
+    }
+  ]
+}

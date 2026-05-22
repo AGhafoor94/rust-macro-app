@@ -2,7 +2,7 @@
   "appName": "Open 2 Explorer Windows",
   "loop": 1,
   "description": "",
-  "hotkey": "162, 164",
+  "hotkey": "",
   "wordDelay": 10,
   "delayForEachLoop": 1000,
   "readCsv": "",
@@ -10,19 +10,18 @@
     {
       "appValue": "app",
       "websiteOpen": false,
-      "loop": 1,
-      "runOnce": [],
-      "steps": [
+      "loop": 5,
+      "runOnce": [
         {
           "name": "Wait",
           "code": 999,
           "held": false,
           "sentence": "",
-          "time": 1500,
+          "time": 500,
           "loop": 1
         },
         {
-          "name": "Command",
+          "name": "cmd",
           "code": 987,
           "held": false,
           "sentence": "start %userprofile%\\Downloads",
@@ -34,7 +33,7 @@
           "code": 999,
           "held": false,
           "sentence": "",
-          "time": 2000,
+          "time": 500,
           "loop": 1
         },
         {
@@ -70,14 +69,6 @@
           "loop": 1
         },
         {
-          "name": "Wait",
-          "code": 999,
-          "held": false,
-          "sentence": "",
-          "time": 2000,
-          "loop": 1
-        },
-        {
           "name": "ESC key",
           "code": 27,
           "held": false,
@@ -98,7 +89,7 @@
           "code": 999,
           "held": false,
           "sentence": "",
-          "time": 2000,
+          "time": 500,
           "loop": 1
         },
         {
@@ -164,11 +155,13 @@
           "sentence": "",
           "time": 500,
           "loop": 1
-        },
+        }
+      ],
+      "steps": [
         {
           "name": "Mouse move",
           "code": 804,
-          "sentence": "1400,350",
+          "sentence": "1400,200",
           "held": false,
           "time": 0,
           "loop": 1
@@ -234,6 +227,16 @@
           "code": 801,
           "sentence": "",
           "held": false,
+          "time": 0,
+          "loop": 1
+        }
+      ],
+      "endSteps": [
+        {
+          "name": "powershell",
+          "code": 991,
+          "held": false,
+          "sentence": "",
           "time": 0,
           "loop": 1
         }

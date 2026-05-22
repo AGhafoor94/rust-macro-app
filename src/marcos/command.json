@@ -12,6 +12,7 @@
       "websiteOpen": false,
       "loop": 1,
       "runOnce": [],
+      "endSteps": [],
       "steps": [
         {
           "name": "CSV",

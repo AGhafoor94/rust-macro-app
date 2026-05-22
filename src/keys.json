@@ -87,9 +87,14 @@
     { "name": "6", "windows": 66, "ascii": 54, "shift": false },
     { "name": "/", "windows": 111, "ascii": 0, "shift": false },
     { "name": "8", "windows": 68, "ascii": 56, "shift": false },
-    { "name": "Wait (Delay in Seconds)", "windows": 999, "ascii": 0, "shift": false},
-    {"name": "F11","windows":122,"ascii": 0, "shift": false },
-    {"name": "F12","windows":123,"ascii": 0, "shift": false },
+    {
+      "name": "Wait (Delay in Seconds)",
+      "windows": 999,
+      "ascii": 0,
+      "shift": false
+    },
+    { "name": "F11", "windows": 122, "ascii": 0, "shift": false },
+    { "name": "F12", "windows": 123, "ascii": 0, "shift": false },
     { "name": "*", "windows": 106, "ascii": 0, "shift": false },
     { "name": "\"", "windows": 0, "ascii": 34, "shift": true },
     { "name": "-", "windows": 109, "ascii": 0, "shift": false },
@@ -125,12 +130,15 @@
     { "name": "|", "windows": 0, "ascii": 124, "shift": true },
     { "name": "}", "windows": 0, "ascii": 125, "shift": true },
     { "name": "~", "windows": 0, "ascii": 126, "shift": false },
-    {"name": "Sentence","windows":998,"ascii": 0, "shift": false },
-    {"name": "Sentence Pass","windows":997,"ascii": 0, "shift": false },
-    {"name": "Command","windows":987,"ascii": 0, "shift": false },
-    {"name": "Add Code","windows":996,"ascii": 0, "shift": false },
-    {"name": "CSV data","windows":995,"ascii": 0, "shift": false },
-    {"name": "Get Window Title","windows":994,"ascii": 0, "shift": false },
-    {"name": "Clipboard","windows":993,"ascii": 0, "shift": false }
+    { "name": "\n", "windows": 10, "ascii": 10, "shift": false },
+    { "name": "\t", "windows": 11, "ascii": 11, "shift": false },
+    { "name": "\r", "windows": 13, "ascii": 13, "shift": false },
+    { "name": "Sentence", "windows": 998, "ascii": 0, "shift": false },
+    { "name": "Sentence Pass", "windows": 997, "ascii": 0, "shift": false },
+    { "name": "Command", "windows": 987, "ascii": 0, "shift": false },
+    { "name": "Add Code", "windows": 996, "ascii": 0, "shift": false },
+    { "name": "CSV data", "windows": 995, "ascii": 0, "shift": false },
+    { "name": "Get Window Title", "windows": 994, "ascii": 0, "shift": false },
+    { "name": "Clipboard", "windows": 993, "ascii": 0, "shift": false }
   ]
 }

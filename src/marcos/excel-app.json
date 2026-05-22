@@ -2,7 +2,7 @@
   "appName": "EXCEL",
   "loop": 1,
   "description": "",
-  "hotkey": "162, 164",
+  "hotkey": "",
   "wordDelay": 10,
   "delayForEachLoop": 1000,
   "readCsv": "",
@@ -10,9 +10,9 @@
     {
       "appValue": "EXCEL",
       "websiteOpen": false,
-      "loop": 1,
-      "runOnce": [],
-      "steps": [
+      "loop": 10,
+      "endSteps": [],
+      "runOnce": [
         {
           "name": "Wait",
           "code": 999,
@@ -108,7 +108,9 @@
           "sentence": "",
           "time": 2000,
           "loop": 1
-        },
+        }
+      ],
+      "steps": [
         {
           "name": "Shift key",
           "code": 160,

@@ -1,0 +1,173 @@
+{
+  "appName": "CSV File",
+  "loop": 1,
+  "description": "",
+  "hotkey": "",
+  "wordDelay": 10,
+  "delayForEachLoop": 1000,
+  "readCsv": "C:\\Users\\adnan\\Downloads\\test csv.csv",
+  "app": [
+    {
+      "appValue": "Excel",
+      "websiteOpen": false,
+      "loop": 1,
+      "runOnce": [
+        {
+          "name": "Check",
+          "code": 994,
+          "held": false,
+          "sentence": "Excel",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "ALT key",
+          "code": 164,
+          "held": true,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Space key",
+          "code": 32,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "X Key",
+          "code": 88,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "ALT key",
+          "code": 164,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "Enter key",
+          "code": 13,
+          "sentence": "",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        }
+      ],
+      "steps": [
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "0,0",
+          "code": 995,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "Tab",
+          "code": 13,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "0,2",
+          "code": 995,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 1000,
+          "loop": 1
+        },
+        {
+          "name": "Mouse move",
+          "code": 804,
+          "sentence": "500,250",
+          "held": false,
+          "time": 0,
+          "loop": 1
+        },
+        {
+          "name": "Tab",
+          "code": 13,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1
+        }
+      ],
+      "endSteps": []
+    }
+  ]
+}

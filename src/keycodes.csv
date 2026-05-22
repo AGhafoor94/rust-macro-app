@@ -125,6 +125,9 @@
 {"name": "|","windows":0,"ascii": 124, "shift": true },
 {"name": "}","windows":0,"ascii": 125, "shift": true },
 {"name": "~","windows":0,"ascii": 126, "shift": false },
+{ "name": "\n", "windows": 10, "ascii": 10, "shift": false },
+{ "name": "\t", "windows": 11, "ascii": 11, "shift": false },
+{ "name": "\r", "windows": 13, "ascii": 13, "shift": false },
 {"name": "Sentence","windows":998,"ascii": 0, "shift": false },
 {"name": "Sentence Pass","windows":997,"ascii": 0, "shift": false }
 {"name": "Command","windows":987,"ascii": 0, "shift": false },
