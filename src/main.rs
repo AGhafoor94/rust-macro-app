@@ -15,17 +15,18 @@ use reqwest::header::{ACCEPT, CONTENT_TYPE};
 
 // https://docs.rs/crate/windows/0.56.0/features
 
-use windows::{
-    // Media::Ocr::*,
-    Win32::{
-        Foundation::*,
-        System::{
-            DataExchange::{CloseClipboard, GetClipboardData, OpenClipboard, SetClipboardData},
-            Shutdown::LockWorkStation,
-            SystemInformation::GetLocalTime,
-        },
-        UI::{Input::KeyboardAndMouse::*, WindowsAndMessaging::*},
+use windows::Win32::{
+    Foundation::*,
+    Graphics::Gdi::{
+        CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, GetDeviceCaps, GetPixel, GetWindowDC,
+        HORZRES, VERTRES,
     },
+    System::{
+        DataExchange::{CloseClipboard, GetClipboardData, OpenClipboard, SetClipboardData},
+        Shutdown::LockWorkStation,
+        SystemInformation::GetLocalTime,
+    },
+    UI::{Input::KeyboardAndMouse::*, WindowsAndMessaging::*},
 };
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -258,8 +259,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             // let _ = &buffer_csv_lines.split("\r\n").into_iter().for_each(|line| println!("{}", line));
-            csv_lines_loop = buffer_csv_lines.split("\r\n").clone().count() as u16;
-            csv_lines = buffer_csv_lines.split("\r\n").collect();
+            if buffer_csv_lines.contains("\r\n") {
+                csv_lines_loop = buffer_csv_lines.split("\r\n").clone().count() as u16;
+                csv_lines = buffer_csv_lines.split("\r\n").collect();
+            } else {
+                csv_lines_loop = buffer_csv_lines.split("\n").clone().count() as u16;
+                csv_lines = buffer_csv_lines.split("\n").collect();
+            }
             if csv_lines[csv_lines.len() - 1].len() == 0 {
                 csv_lines_loop = csv_lines_loop - 1;
             }
@@ -297,8 +303,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             // let _ = &buffer_csv_lines.split("\r\n").into_iter().for_each(|line| println!("{}", line));
-            csv_lines_loop = buffer_csv_lines.split("\r\n").clone().count() as u16;
-            csv_lines = buffer_csv_lines.split("\r\n").collect();
+            if buffer_csv_lines.contains("\r\n") {
+                csv_lines_loop = buffer_csv_lines.split("\r\n").clone().count() as u16;
+                csv_lines = buffer_csv_lines.split("\r\n").collect();
+            } else {
+                csv_lines_loop = buffer_csv_lines.split("\n").clone().count() as u16;
+                csv_lines = buffer_csv_lines.split("\n").collect();
+            }
+            // csv_lines_loop = buffer_csv_lines.split("\r\n").clone().count() as u16;
+            // csv_lines = buffer_csv_lines.split("\r\n").collect();
             if csv_lines[csv_lines.len() - 1].len() == 0 {
                 csv_lines_loop = csv_lines_loop - 1;
             }
@@ -468,7 +481,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     for i in 0..loops {
-        // if _current_system_time.wHour > 14 {
+        // if _current_system_time.wHour == 13 && _current_system_time.wMinute > 14 {
         //     unsafe {
         //         let _ = LockWorkStation();
         //         std::process::exit(0x000)
@@ -1028,44 +1041,63 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
     } else {
         _sentence_pass = sentence.as_bytes().to_vec();
     }
-
     _sentence_pass.into_iter().for_each(|f| {
+        // time here
+        if *code == 995 {
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
         let mut _u16_total_key: u16 = 0;
         let mut hex_code: String = format!("{f:#X}");
         hex_code = hex_code.replace("0x", "");
         let first_char: String = hex_code[..1].to_owned();
         if f <= 15 {
-            _u16_total_key = first_char.parse::<u16>().unwrap();
+            if first_char == "A" || first_char == "a" {
+                _u16_total_key = _u16_total_key + 10;
+            } else if first_char == "B" || first_char == "b" {
+                _u16_total_key = _u16_total_key + 11;
+            } else if first_char == "C" || first_char == "c" {
+                _u16_total_key = _u16_total_key + 12;
+            } else if first_char == "D" || first_char == "d" {
+                _u16_total_key = _u16_total_key + 13;
+            } else if first_char == "E" || first_char == "e" {
+                _u16_total_key = _u16_total_key + 14;
+            } else if first_char == "F" || first_char == "f" {
+                _u16_total_key = _u16_total_key + 15;
+            } else {
+                _u16_total_key = first_char.parse::<u16>().unwrap();
+            }
+            // _u16_total_key = _u16_total_key * 16;
+            // _u16_total_key = first_char.parse::<u16>().unwrap();
         } else {
-            let first_char: String = hex_code[..1].to_owned();
+            // let first_char: String = hex_code[..1].to_owned();
             let second_char: String = hex_code[1..].to_owned();
             // println!("{}, {}",first_char, second_char);
             _u16_total_key = first_char.parse::<u16>().unwrap();
             _u16_total_key = _u16_total_key * 16;
-            match &second_char as &str {
-                "A" => _u16_total_key += 10,
-                "B" => _u16_total_key += 11,
-                "C" => _u16_total_key += 12,
-                "D" => _u16_total_key += 13,
-                "E" => _u16_total_key += 14,
-                "F" => _u16_total_key += 15,
-                _ => _u16_total_key += second_char.parse::<u16>().unwrap(),
-            };
-            // if second_char == "A" || second_char == "a" {
-            //     _u16_total_key = _u16_total_key + 10;
-            // } else if second_char == "B" || second_char == "b" {
-            //     _u16_total_key = _u16_total_key + 11;
-            // } else if second_char == "C" || second_char == "c" {
-            //     _u16_total_key = _u16_total_key + 12;
-            // } else if second_char == "D" || second_char == "d" {
-            //     _u16_total_key = _u16_total_key + 13;
-            // } else if second_char == "E" || second_char == "e" {
-            //     _u16_total_key = _u16_total_key + 14;
-            // } else if second_char == "F" || second_char == "f" {
-            //     _u16_total_key = _u16_total_key + 15;
-            // } else {
-            //     _u16_total_key = _u16_total_key + second_char.parse::<u16>().unwrap()
-            // }
+            // match &second_char.to_uppercase() as &str {
+            //     "A" => _u16_total_key += 10,
+            //     "B" => _u16_total_key += 11,
+            //     "C" => _u16_total_key += 12,
+            //     "D" => _u16_total_key += 13,
+            //     "E" => _u16_total_key += 14,
+            //     "F" => _u16_total_key += 15,
+            //     _ => _u16_total_key += second_char.parse::<u16>().unwrap(),
+            // };
+            if second_char == "A" || second_char == "a" {
+                _u16_total_key = _u16_total_key + 10;
+            } else if second_char == "B" || second_char == "b" {
+                _u16_total_key = _u16_total_key + 11;
+            } else if second_char == "C" || second_char == "c" {
+                _u16_total_key = _u16_total_key + 12;
+            } else if second_char == "D" || second_char == "d" {
+                _u16_total_key = _u16_total_key + 13;
+            } else if second_char == "E" || second_char == "e" {
+                _u16_total_key = _u16_total_key + 14;
+            } else if second_char == "F" || second_char == "f" {
+                _u16_total_key = _u16_total_key + 15;
+            } else {
+                _u16_total_key = _u16_total_key + second_char.parse::<u16>().unwrap()
+            }
         }
         let find_key: Option<&KeyCodesCsv> =
             keys_json.keys.iter().find(|f| &f.ascii == &_u16_total_key);
@@ -1084,26 +1116,31 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
         // check if key is less than u16 then shift
         unsafe {
             let key_json: i16 = VkKeyScanW(key_from_json);
-            if (key_from_json >> 8 & 1) == 1 {
-                // let mut shift_key_state:i16 = GetKeyState(20);
-
-                if hold_shift {
-                    send_multi_input_messages_from_i16(16, key_json, delay)
-                } else {
-                    send_input_messages(20, true, true);
-                    // std::thread::sleep(std::time::Duration::from_millis(22));
-                    send_input_messages_from_i16(key_json, true, true);
-                    // shift_key_state = GetKeyState(20);
-                    std::thread::sleep(std::time::Duration::from_millis(delay));
-                    // println!("SHIFT STATE SHOULD BE 1 part 2: {:?}", shift_key_state);
-                    send_input_messages(20, true, true)
+            println!(
+                "KEY SCAN: {}, UTF16: {}",
+                key_from_json >> 8 & 1,
+                _u16_total_key
+            );
+            // send_input_messages(_u16_total_key, true, true);
+            match key_from_json >> 8 & 1 {
+                1 => {
+                    match hold_shift {
+                        true => send_multi_input_messages_from_i16(16, key_json, delay),
+                        false => {
+                            send_input_messages(20, true, true);
+                            // std::thread::sleep(std::time::Duration::from_millis(22));
+                            send_input_messages_from_i16(key_json, true, true);
+                            // shift_key_state = GetKeyState(20);
+                            std::thread::sleep(std::time::Duration::from_millis(delay));
+                            // println!("SHIFT STATE SHOULD BE 1 part 2: {:?}", shift_key_state);
+                            send_input_messages(20, true, true)
+                        }
+                    }
                 }
-            } else {
-                if hold_shift {
-                    send_multi_input_messages_from_i16(16, key_json, delay)
-                } else {
-                    send_input_messages_from_i16(key_json, true, true)
-                }
+                _ => match hold_shift {
+                    true => send_multi_input_messages_from_i16(16, key_json, delay),
+                    false => send_input_messages_from_i16(key_json, true, true),
+                },
             }
         }
         // std::thread::sleep(std::time::Duration::from_millis(100))
@@ -1219,6 +1256,13 @@ fn mouse_input(key: &Steps, log_file_path: &str) {
             );
             send_mouse_input_message(0, 0, false, 0x02, key.held, &log_file_path)
         }
+        803 => {
+            update_log_file(
+                &log_file_path,
+                format!("Mouse Right Click, Key Code: {}", &key.code).as_str(),
+            );
+            send_mouse_input_message(0, 0, false, 0x03, key.held, &log_file_path)
+        }
         804 => {
             if !String::is_empty(&key.sentence) {
                 std::thread::sleep(std::time::Duration::from_millis(10));
@@ -1265,7 +1309,7 @@ fn run_steps(
 ) {
     let _mouse_movements: Vec<Steps> = Vec::new();
     for i in 0..loops {
-        // if _current_system_time.wHour > 14 {
+        // if _current_system_time.wHour == 13 {
         //     unsafe {
         //         let _ = LockWorkStation();
         //         std::process::exit(0x000)
@@ -1437,7 +1481,7 @@ fn run_steps(
                                         &key.code,
                                         &keys_json,
                                         &log_file_path,
-                                        data.word_delay,
+                                        data.word_delay + 500,
                                     );
                                     if code_to_check_csv == _current_csv_index {
                                         _current_csv_index = 0;
@@ -1778,34 +1822,19 @@ fn run_only_steps(
                             if csv_lines[i].len() > 0 {
                                 let key_name_split: &Vec<&str> =
                                     &key.name.split(",").collect::<Vec<&str>>();
-                                let mut split_key_name_into_int: [u16; 2] = [0; 2];
-                                split_key_name_into_int[0] = key_name_split[0]
+
+                                let _csv_string_array: Vec<&str> = csv_lines[(key_name_split[0]
                                     .parse::<u16>()
-                                    .expect("Failed to parse int");
-                                split_key_name_into_int[1] = key_name_split[1]
-                                    .parse::<u16>()
-                                    .expect("Failed to parse int");
-                                let _csv_string_array: Vec<&str> = csv_lines
-                                    [(split_key_name_into_int[0] as usize) + i]
+                                    .expect("Failed to parse int")
+                                    as usize)
+                                    + i]
                                     .split(",")
                                     .collect();
-                                println!(
-                                    "SPLIT KEY NAME: 1: ({:?})",
-                                    _csv_string_array[split_key_name_into_int[1] as usize]
-                                        .to_string()
-                                        .replace("\u{feff}", "")
-                                );
-                                println!("CSV LINES WITH INDEX: {:?}", csv_lines[i]);
-                                update_log_file(
-                                        &log_file_path,
-                                        format!(
-                                            "Getting item in csv data: \"{}\", Sentence: {}, Key Name: {}, Key Code: {}",
-                                            _csv_string_array[split_key_name_into_int[1] as usize], &key.sentence, &key.name, &key.code
-                                        )
-                                        .as_str(),
-                                    );
                                 add_sentence(
-                                    _csv_string_array[split_key_name_into_int[1] as usize]
+                                    _csv_string_array[key_name_split[1]
+                                        .parse::<u16>()
+                                        .expect("Failed to parse int")
+                                        as usize]
                                         .replace("\u{feff}", "")
                                         .as_str(),
                                     &key.code,
@@ -1869,6 +1898,7 @@ fn run_only_steps(
                             //     "SLEEPING: {}, SENTENCE: {}",
                             //     get_current_window_text_for_loop, key.sentence
                             // );
+
                             time_out += 500;
                             // println!("LOOP TIME OUT: {}", time_out);
                             if time_out > 20000 {
@@ -1877,6 +1907,7 @@ fn run_only_steps(
                             }
                             if get_current_window_text_for_loop.contains(key.sentence.as_str()) {
                                 // println!("CURRENT WINDOW: {}", get_current_window_text_for_loop);
+
                                 break;
                             }
                         }
@@ -1937,7 +1968,9 @@ fn run_only_steps(
                             }
                         }
                     }
-                    if key.name.contains("Log") && result_window_title_main.contains("Log") {
+                    if key.name.contains("Log") && get_current_window_text_for_loop.contains("Log")
+                    {
+                        println!("LOG: {}", get_current_window_text_for_loop);
                         send_input_messages(162, false, true);
                         send_input_messages(160, false, true);
                         send_input_messages(74, true, true);
@@ -1963,8 +1996,8 @@ fn run_only_steps(
                         send_input_messages(160, true, true);
                         std::thread::sleep(std::time::Duration::from_millis(1000))
                     }
-                    if key.name.contains("Log") && !result_window_title_main.contains("Log")
-                        || !result_window_title_main.contains(&key.name)
+                    if key.name.contains("Log") && !get_current_window_text_for_loop.contains("Log")
+                        || !get_current_window_text_for_loop.contains(&key.name)
                     {
                         // println!("Not Current Screen")
                     } else {
@@ -2038,9 +2071,61 @@ fn run_only_steps(
                     //     println!("PIXEL COLOUR: {:?}", pixel);
                     // }
                     unsafe {
-                        let _ = EnumWindows(Some(enum_window), LPARAM(0));
+                        // let _ = EnumWindows(Some(enum_window), LPARAM(0));
                         // co_initialize_test();
-                        // let _ = EnumChildWindows(GetActiveWindow(), Some(enum_window), LPARAM(0));
+                        let _ = EnumChildWindows(GetActiveWindow(), Some(enum_window), LPARAM(0));
+                        let window_dc = GetWindowDC(GetActiveWindow());
+                        let create_compatible_dc = CreateCompatibleDC(window_dc);
+                        let screen_width = GetDeviceCaps(create_compatible_dc, HORZRES);
+                        let screen_height = GetDeviceCaps(create_compatible_dc, VERTRES);
+
+                        let bitmap = CreateCompatibleBitmap(
+                            create_compatible_dc,
+                            screen_width,
+                            screen_height,
+                        );
+                        if bitmap.is_invalid() {
+                            println!("ERROR TRYING TO CREATE BITMAP: {:?}", bitmap);
+                        }
+                        // 0x00 FF -> blue FF -> green FF -> red
+                        // Calc = 0 x 16 + 1 x 1
+                        // AF = 10 X 16 = 160 + 15 x 1 = 15 = 175
+                        // for w in 0..screen_width {
+                        //     for h in 0..screen_height {
+                        //         let pixel_colour: COLORREF = GetPixel(window_dc, w, h);
+                        //         // let rgb_triple: RGBTRIPLE = RGBTRIPLE {
+                        //         //     ..Default::default()
+                        //         // };
+
+                        //         println!(
+                        //             "COLOUR REF: W: {}, H: {}, {:?}",
+                        //             w,
+                        //             h,
+                        //             format!("{:x}", pixel_colour.0)
+                        //         );
+                        //     }
+                        // }
+
+                        for w in 250..1500 {
+                            for h in (screen_height - 100)..screen_height {
+                                let pixel_colour: COLORREF = GetPixel(window_dc, w, h);
+                                println!(
+                                    "COLOUR REF: W: {}, H: {}, {:?}",
+                                    w,
+                                    h,
+                                    format!("{:x}", pixel_colour.0)
+                                );
+                            }
+                        }
+                        // let pixel_colour: COLORREF = GetPixel(window_dc, 1900, 1000);
+                        // println!(
+                        //     "COLOUR REF: W: {}, H: {}, {:?}",
+                        //     1900,
+                        //     1000,
+                        //     format!("{:x}", pixel_colour.0)
+                        // );
+                        let _ = DeleteDC(window_dc);
+                        let _ = DeleteDC(create_compatible_dc);
                     }
                     // let screenshot_file_path: &str =
                     // "C:\\Users\\adnan\\Downloads\\OneDrive_1_16-05-2026\\118.png";
@@ -2134,8 +2219,7 @@ extern "system" fn enum_window(window: HWND, _: LPARAM) -> BOOL {
         };
         GetWindowInfo(window, &mut info).unwrap();
         // let parent_window: HWND = GetWindow(window, GW_CHILD);
-        let parent_window: HWND = GetParent(window);
-        let _ = EnumChildWindows(parent_window, Some(enum_child_windows), LPARAM(0));
+        // let _ = EnumChildWindows(parent_window, Some(enum_child_windows), LPARAM(0));
         if !text.is_empty() && info.dwStyle.contains(WS_VISIBLE) {
             println!("{} ({}, {})", text, info.rcWindow.left, info.rcWindow.top);
         }
