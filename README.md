@@ -4,15 +4,6 @@
 
 #### Accessing Windows api
 
-#### To Work on:
-
-- Detect amount of files to work on
-  - For Each file, run script
-  - Command to loop through number of files
-  - Update steps loop from command list
-
-- Section that runs once only
-
 ## Description
 
 #### Accessing Windows api
@@ -20,7 +11,14 @@
 Trying to learn about creating automated process using json to press keys and move mouse.
 Creates a log on what action is performed.
 
-#### To Work on:
+#### Update:
+
+- Created Mouse Check to detect change in mouse cursor e.g. check if mouse is loading then continue
+
+#### To do:
+
+- Add skip for current loop if timed out to get into next iteration
+-
 
 #### JSON format
 
