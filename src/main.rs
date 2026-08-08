@@ -3,6 +3,7 @@ use base64::Engine;
 use serde::{Deserialize, Serialize};
 use std::{
     env::args,
+    ffi::CString,
     fs::{self, DirEntry, File, FileType},
     io::{self, Read},
     path::Path,
@@ -14,12 +15,12 @@ use reqwest::header::HeaderMap;
 use reqwest::header::{ACCEPT, CONTENT_TYPE};
 
 // https://docs.rs/crate/windows/0.56.0/features
-
+use windows::core::PCSTR;
 use windows::Win32::{
     Foundation::*,
     Graphics::Gdi::{
-        CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, GetDeviceCaps, GetPixel, GetWindowDC,
-        HORZRES, VERTRES,
+        CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, GetDeviceCaps, GetWindowDC,
+        BITMAPINFO, HORZRES, VERTRES,
     },
     System::{
         DataExchange::{CloseClipboard, GetClipboardData, OpenClipboard, SetClipboardData},
@@ -49,7 +50,7 @@ struct App {
     steps: Vec<Steps>,
     end_steps: Vec<Steps>,
 }
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 struct Steps {
     name: String,
@@ -57,6 +58,7 @@ struct Steps {
     held: bool,
     sentence: String,
     time: u64,
+    skip: bool,
     r#loop: u8,
 }
 #[derive(Serialize, Deserialize)]
@@ -84,8 +86,8 @@ struct GraphUserDetails {
 struct GraphToken {
     access_token: String,
 }
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = args().collect();
     let mut _current_system_time: SYSTEMTIME = SYSTEMTIME {
         ..Default::default()
@@ -481,7 +483,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     for i in 0..loops {
-        // if _current_system_time.wHour == 13 && _current_system_time.wMinute > 14 {
+        // if _current_system_time.wHour == 13 {
+        //     unsafe {
+        //         let _ = LockWorkStation();
+        //         std::process::exit(0x000)
+        //         // let _ = InitiateSystemShutdownA(None,None,0,true, false);
+        //         // let _ = InitiateShutdownA(None,None,0,SHUTDOWN_FORCE_OTHERS|SHUTDOWN_GRACE_OVERRIDE,SHTDN_REASON_FLAG_PLANNED);
+        //     }
+        // }
+        // if _current_system_time.wHour == 15 {
         //     unsafe {
         //         let _ = LockWorkStation();
         //         std::process::exit(0x000)
@@ -1116,11 +1126,11 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
         // check if key is less than u16 then shift
         unsafe {
             let key_json: i16 = VkKeyScanW(key_from_json);
-            println!(
-                "KEY SCAN: {}, UTF16: {}",
-                key_from_json >> 8 & 1,
-                _u16_total_key
-            );
+            // println!(
+            //     "KEY SCAN: {}, UTF16: {}",
+            //     key_from_json >> 8 & 1,
+            //     _u16_total_key
+            // );
             // send_input_messages(_u16_total_key, true, true);
             match key_from_json >> 8 & 1 {
                 1 => {
@@ -1146,6 +1156,7 @@ fn add_sentence(sentence: &str, code: &u16, keys_json: &Keys, log_file_path: &st
         // std::thread::sleep(std::time::Duration::from_millis(100))
     });
 }
+
 fn get_key_state(key_code: i32) -> bool {
     unsafe {
         let key_state: i16 = GetAsyncKeyState(key_code);
@@ -1156,11 +1167,12 @@ fn get_key_state(key_code: i32) -> bool {
         }
     }
 }
+
 fn check_for_length_time_and_date(date_or_time: u16) -> String {
     if date_or_time < 10 {
-        format!("0{}", date_or_time)
+        return format!("0{}", date_or_time);
     } else {
-        format!("{}", date_or_time)
+        return format!("{}", date_or_time);
     }
 }
 fn update_log_file(log_file_path: &str, additional_data: &str) {
@@ -1309,7 +1321,7 @@ fn run_steps(
 ) {
     let _mouse_movements: Vec<Steps> = Vec::new();
     for i in 0..loops {
-        // if _current_system_time.wHour == 13 {
+        // if _current_system_time.wHour == 14 {
         //     unsafe {
         //         let _ = LockWorkStation();
         //         std::process::exit(0x000)
@@ -1540,10 +1552,10 @@ fn run_steps(
                                 std::thread::sleep(std::time::Duration::from_millis(500));
                                 get_current_window_text_for_loop =
                                     get_current_window_heading_text(&log_file_path);
-                                // println!(
-                                //     "SLEEPING: {}, SENTENCE: {}",
-                                //     get_current_window_text_for_loop, key.sentence
-                                // );
+                                println!(
+                                    "SLEEPING: {}, SENTENCE: {}",
+                                    get_current_window_text_for_loop, key.sentence
+                                );
                                 time_out += 500;
                                 // println!("LOOP TIME OUT: {}", time_out);
                                 if time_out > 20000 {
@@ -1750,8 +1762,14 @@ fn run_only_steps(
 ) {
     let _mouse_movements: Vec<Steps> = Vec::new();
     let mut _current_csv_index: usize = 0;
+    let temp_steps: &Vec<Steps> = steps_vec;
+    let _global_cursor: HCURSOR;
+    unsafe {
+        _global_cursor = GetCursor();
+        // let mut internal_window_text: [u16; 100] = [0; 100];
+    }
     for i in 0..run_steps_number {
-        for (_, key) in steps_vec.iter().enumerate() {
+        for (j, key) in steps_vec.iter().enumerate() {
             for _ in 0..key.r#loop {
                 // println!("{}", j);
                 // std::thread::sleep(std::time::Duration::from_millis(1));
@@ -1874,10 +1892,38 @@ fn run_only_steps(
                     }
                 } else if key.code == 994 {
                     // Window Title
+
                     let mut get_current_window_text_for_loop: String =
                         get_current_window_heading_text(&log_file_path);
+                    if key.name.eq("Delete") {
+                        let c_string = CString::new(key.sentence.to_owned()).unwrap();
+                        unsafe {
+                            _ = windows::Win32::Storage::FileSystem::DeleteFileA(PCSTR(
+                                c_string.as_ptr() as *const u8,
+                            ));
+                        }
+                    }
+                    if key.name.eq("Mouse Check") {
+                        // let mut global_cursor: CURSORINFO = CURSORINFO {
+                        //     cbSize: core::mem::size_of::<CURSORINFO>() as u32,
+                        //     ..Default::default()
+                        // };
+                        let mut time_out: u32 = 0;
+                        let mut check_cursor: bool = true;
+                        loop {
+                            std::thread::sleep(std::time::Duration::from_millis(100));
+                            if !check_cursor {
+                                break;
+                            }
+                            time_out += 100;
+                            check_cursor = check_if_cursor_is_in_loading_state(_global_cursor);
+                            std::thread::sleep(std::time::Duration::from_millis(100));
+                        }
+                        println!("TIME: {}", time_out);
+                    }
                     if key.name.contains("Check") {
                         // println!("CHECK CONDITION");
+                        // if time out then skip the rest
                         update_log_file(
                             &log_file_path,
                             format!(
@@ -1898,16 +1944,36 @@ fn run_only_steps(
                             //     "SLEEPING: {}, SENTENCE: {}",
                             //     get_current_window_text_for_loop, key.sentence
                             // );
-
                             time_out += 500;
+                            if key.name.to_lowercase().contains("continue") {
+                                break;
+                            }
+                            if key.name.to_lowercase().contains("skip") {
+                                if time_out > 20000 {
+                                    println!(
+                                        "1914: LENGTH: INDEX: {}, STEPS LENGTH: {}",
+                                        j,
+                                        steps_vec.len()
+                                    );
+                                    for k in j..steps_vec.len() {
+                                        println!("STEP: {:?}", steps_vec.get(k));
+                                    }
+                                    // std::process::exit(0x000)
+                                } else {
+                                    continue;
+                                }
+                            }
                             // println!("LOOP TIME OUT: {}", time_out);
-                            if time_out > 20000 {
-                                // println!("Timed out");
+                            if time_out > 20000 && !key.name.contains("-") {
+                                println!(
+                                    "ENDING CHECK HERE: {}, SENTENCE: {}, INDEX: {}",
+                                    key.name, key.sentence, j
+                                );
                                 std::process::exit(0x000)
                             }
                             if get_current_window_text_for_loop.contains(key.sentence.as_str()) {
                                 // println!("CURRENT WINDOW: {}", get_current_window_text_for_loop);
-
+                                std::thread::sleep(std::time::Duration::from_millis(500));
                                 break;
                             }
                         }
@@ -1916,13 +1982,84 @@ fn run_only_steps(
                         get_current_window_text_for_loop =
                             get_current_window_heading_text(&log_file_path);
                         let split_key_name_by_hyphen: Vec<&str> = key.name.split("-").collect();
-                        // println!(
-                        //     "HITTING SKIP {}, SENTENCE: {} SPLIT {}, NAME: {}",
-                        //     key.name,
-                        //     key.sentence,
-                        //     split_key_name_by_hyphen[1],
-                        //     get_current_window_text_for_loop
-                        // );
+
+                        /*
+                         */
+                        if key.name.contains("Next") {
+                            get_current_window_text_for_loop =
+                                get_current_window_heading_text(&log_file_path);
+                            let split_key_name_by_hyphen: Vec<&str> = key.name.split("-").collect();
+                            // println!(
+                            //     "HITTING SKIP {}, SENTENCE: {} SPLIT {}, NAME: {}",
+                            //     key.name,
+                            //     key.sentence,
+                            //     split_key_name_by_hyphen[1],
+                            //     get_current_window_text_for_loop
+                            // );
+                            if get_current_window_text_for_loop
+                                .contains(split_key_name_by_hyphen[1])
+                                || get_current_window_text_for_loop.to_lowercase().trim()
+                                    == split_key_name_by_hyphen[1].to_lowercase().trim()
+                            {
+                                let sentence_key_split_new_line: Vec<&str> =
+                                    key.sentence.split("\n").collect();
+                                let key_code_in_sentence: usize =
+                                    sentence_key_split_new_line.iter().count();
+                                let mut keys_loop_press_vec: Vec<u16> = vec![];
+
+                                for key in 0..key_code_in_sentence {
+                                    let strings_keys_split_by_hyphen: Vec<&str> =
+                                        sentence_key_split_new_line[key].split("-").collect();
+
+                                    // println!(
+                                    //     "{}, {}",
+                                    //     strings_keys_split_by_hyphen[0]
+                                    //         .trim()
+                                    //         .parse::<u16>()
+                                    //         .unwrap(),
+                                    //     strings_keys_split_by_hyphen[1]
+                                    //         .trim()
+                                    //         .parse::<u16>()
+                                    //         .unwrap()
+                                    // );
+                                    for _ in 0..strings_keys_split_by_hyphen[1]
+                                        .trim()
+                                        .parse::<u16>()
+                                        .unwrap()
+                                    {
+                                        keys_loop_press_vec.push(
+                                            strings_keys_split_by_hyphen[0]
+                                                .trim()
+                                                .parse::<u16>()
+                                                .unwrap(),
+                                        );
+                                    }
+                                }
+                                // println!("keys_loop_press_vec {:?}", keys_loop_press_vec);
+                                for key_in_loop_skip in keys_loop_press_vec {
+                                    std::thread::sleep(std::time::Duration::from_millis(500));
+                                    send_input_messages(key_in_loop_skip, true, true);
+                                }
+                            }
+                        } else if key.name.contains("All") {
+                            get_current_window_text_for_loop =
+                                get_current_window_heading_text(&log_file_path);
+                            let split_key_name_by_hyphen: Vec<&str> = key.name.split("-").collect();
+                            // println!(
+                            //     "HITTING SKIP {}, SENTENCE: {} SPLIT {}, NAME: {}",
+                            //     key.name,
+                            //     key.sentence,
+                            //     split_key_name_by_hyphen[1],
+                            //     get_current_window_text_for_loop
+                            // );
+                            if get_current_window_text_for_loop
+                                .contains(split_key_name_by_hyphen[1])
+                                || get_current_window_text_for_loop.to_lowercase().trim()
+                                    == split_key_name_by_hyphen[1].to_lowercase().trim()
+                            {
+                                for _ in j..steps_vec.iter().enumerate().len() {}
+                            }
+                        }
                         if get_current_window_text_for_loop.contains(split_key_name_by_hyphen[1])
                             || get_current_window_text_for_loop.to_lowercase().trim()
                                 == split_key_name_by_hyphen[1].to_lowercase().trim()
@@ -1968,6 +2105,7 @@ fn run_only_steps(
                             }
                         }
                     }
+
                     if key.name.contains("Log") && get_current_window_text_for_loop.contains("Log")
                     {
                         println!("LOG: {}", get_current_window_text_for_loop);
@@ -2000,11 +2138,11 @@ fn run_only_steps(
                         || !get_current_window_text_for_loop.contains(&key.name)
                     {
                         // println!("Not Current Screen")
-                    } else {
-                        // println!(
-                        //     "660:- RESULT TITLE: {:?}, sentence {}",
-                        //     result_window_title_main, &key.sentence
-                        // );
+                    }
+                    if get_current_window_text_for_loop
+                        .to_lowercase()
+                        .contains(&key.name.to_lowercase())
+                    {
                         send_input_messages(162, false, true);
                         send_input_messages(160, false, true);
                         send_input_messages(74, true, true);
@@ -2021,14 +2159,46 @@ fn run_only_steps(
                         );
                         std::thread::sleep(std::time::Duration::from_millis(1000));
                         send_input_messages(13, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(2000));
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
                         send_input_messages(162, false, true);
                         send_input_messages(160, false, true);
                         send_input_messages(74, true, true);
                         std::thread::sleep(std::time::Duration::from_millis(1000));
                         send_input_messages(162, true, true);
-                        send_input_messages(160, true, true)
+                        send_input_messages(160, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000))
                     }
+                    /*
+                        else {
+                            // println!(
+                            //     "660:- RESULT TITLE: {:?}, sentence {}",
+                            //     result_window_title_main, &key.sentence
+                            // );
+                            send_input_messages(162, false, true);
+                            send_input_messages(160, false, true);
+                            send_input_messages(74, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            send_input_messages(162, true, true);
+                            send_input_messages(160, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            add_sentence(
+                                &key.sentence,
+                                &key.code,
+                                &keys_json,
+                                &log_file_path,
+                                data.word_delay,
+                            );
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            send_input_messages(13, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(2000));
+                            send_input_messages(162, false, true);
+                            send_input_messages(160, false, true);
+                            send_input_messages(74, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            send_input_messages(162, true, true);
+                            send_input_messages(160, true, true)
+                        }
+                    */
                 } else if key.code == 993 {
                     // Clipboard
                     unsafe {
@@ -2097,6 +2267,22 @@ fn run_only_steps(
                         //         //     ..Default::default()
                         //         // };
 
+                        //         // println!(
+                        //         //     "COLOUR REF: W: {}, H: {}, {:?}",
+                        //         //     w,
+                        //         //     h,
+                        //         //     format!("{:x}", pixel_colour.0)
+                        //         // );
+                        //         update_log_file(
+                        //             log_file_path,
+                        //             &format!("w: {}, h: {}, COLOUR: {:x}\n", w, h, pixel_colour.0),
+                        //         );
+                        //     }
+                        // }
+
+                        // for w in 250..1500 {
+                        //     for h in (screen_height - 100)..screen_height {
+                        //         let pixel_colour: COLORREF = GetPixel(window_dc, w, h);
                         //         println!(
                         //             "COLOUR REF: W: {}, H: {}, {:?}",
                         //             w,
@@ -2105,18 +2291,6 @@ fn run_only_steps(
                         //         );
                         //     }
                         // }
-
-                        for w in 250..1500 {
-                            for h in (screen_height - 100)..screen_height {
-                                let pixel_colour: COLORREF = GetPixel(window_dc, w, h);
-                                println!(
-                                    "COLOUR REF: W: {}, H: {}, {:?}",
-                                    w,
-                                    h,
-                                    format!("{:x}", pixel_colour.0)
-                                );
-                            }
-                        }
                         // let pixel_colour: COLORREF = GetPixel(window_dc, 1900, 1000);
                         // println!(
                         //     "COLOUR REF: W: {}, H: {}, {:?}",
@@ -2124,6 +2298,19 @@ fn run_only_steps(
                         //     1000,
                         //     format!("{:x}", pixel_colour.0)
                         // );
+                        let mut bitmap_info: BITMAPINFO = BITMAPINFO {
+                            ..Default::default()
+                        };
+                        // let ppv_bits: core::ffi::c_void;
+                        // let result_h_bitmap = CreateDIBSection(
+                        //     window_dc,
+                        //     &mut bitmap_info,
+                        //     windows::Win32::Graphics::Gdi::DIB_RGB_COLORS,
+                        //     **ppv_bits,
+                        //     hsection,
+                        //     0,
+                        // );
+
                         let _ = DeleteDC(window_dc);
                         let _ = DeleteDC(create_compatible_dc);
                     }
@@ -2161,7 +2348,6 @@ fn run_only_steps(
                         // let _ = DestroyWindow(GetForegroundWindow());
                         let _ = PostMessageA(GetForegroundWindow(), WM_CLOSE, WPARAM(0), LPARAM(0));
                     }
-                    std::process::exit(0x000)
                 } else {
                     update_log_file(
                         &log_file_path,
@@ -2177,7 +2363,37 @@ fn run_only_steps(
         _current_system_time = GetLocalTime();
     }
 }
-
+fn check_if_cursor_is_in_loading_state(mut _global_cursor: HCURSOR) -> bool {
+    let mut local_cursor_info: CURSORINFO = CURSORINFO {
+        cbSize: core::mem::size_of::<CURSORINFO>() as u32,
+        ..Default::default()
+    };
+    unsafe {
+        // let current_cursor_state: HCURSOR = GetCursor();
+        // println!("CURRENT CURSOR: {:?}", current_cursor_state);
+        // let waiting_cursor: HCURSOR =
+        //     LoadCursorW(None, windows::Win32::UI::WindowsAndMessaging::IDC_WAIT)
+        //         .expect("Error getting WAITING CURSOR");
+        // let loading_cursor: Result<HCURSOR, windows::core::Error> = LoadCursorW(
+        //     None,
+        //     windows::Win32::UI::WindowsAndMessaging::IDC_APPSTARTING,
+        // );
+        // let arrow_cursor: HCURSOR =
+        //     LoadCursorW(None, windows::Win32::UI::WindowsAndMessaging::IDC_ARROW)
+        //         .expect("Error getting WAITING CURSOR");
+        _ = GetCursorInfo(&mut local_cursor_info);
+        // println!(
+        //     "2375: LOCAL CURSOR: {:?}. GLOBAL CURSOR: {:?}",
+        //     local_cursor_info.hCursor, _global_cursor
+        // );
+        if local_cursor_info.hCursor != _global_cursor {
+            _global_cursor = local_cursor_info.hCursor;
+            return false;
+        } else {
+            return true;
+        }
+    }
+}
 fn co_initialize_test() {
     use windows::{
         core::*, Win32::System::Com::*, Win32::UI::Accessibility::*,
