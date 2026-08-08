@@ -18,7 +18,6 @@ Creates a log on what action is performed.
 #### To do:
 
 - Add skip for current loop if timed out to get into next iteration
--
 
 #### JSON format
 
