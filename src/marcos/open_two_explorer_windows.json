@@ -18,7 +18,8 @@
           "held": false,
           "sentence": "",
           "time": 500,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "cmd",
@@ -26,15 +27,17 @@
           "held": false,
           "sentence": "start %userprofile%\\Downloads",
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
-          "name": "Wait",
-          "code": 999,
+          "name": "Mouse Check",
+          "code": 994,
           "held": false,
           "sentence": "",
-          "time": 500,
-          "loop": 1
+          "time": 0,
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Check",
@@ -42,7 +45,8 @@
           "held": false,
           "sentence": "Downloads",
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Left Windows key",
@@ -50,7 +54,8 @@
           "held": true,
           "sentence": "",
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Right key",
@@ -58,7 +63,8 @@
           "sentence": "",
           "held": false,
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Wait",
@@ -66,7 +72,8 @@
           "held": false,
           "sentence": "",
           "time": 500,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "ESC key",
@@ -74,7 +81,8 @@
           "held": false,
           "sentence": "",
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Command",
@@ -82,15 +90,17 @@
           "held": false,
           "sentence": "start %userprofile%\\Documents",
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
-          "name": "Wait",
-          "code": 999,
+          "name": "Mouse Check",
+          "code": 994,
           "held": false,
           "sentence": "",
-          "time": 500,
-          "loop": 1
+          "time": 0,
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Check",
@@ -98,7 +108,8 @@
           "held": false,
           "sentence": "Documents",
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Left Windows key",
@@ -106,7 +117,8 @@
           "held": true,
           "sentence": "",
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Left key",
@@ -114,7 +126,8 @@
           "sentence": "",
           "held": false,
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Wait",
@@ -122,7 +135,8 @@
           "held": false,
           "sentence": "",
           "time": 500,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "ESC key",
@@ -130,7 +144,8 @@
           "held": false,
           "sentence": "",
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Wait",
@@ -138,7 +153,8 @@
           "held": false,
           "sentence": "",
           "time": 500,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Left Windows key",
@@ -146,7 +162,8 @@
           "held": false,
           "sentence": "",
           "time": 0,
-          "loop": 2
+          "loop": 2,
+          "skip": false
         },
         {
           "name": "Wait",
@@ -154,7 +171,8 @@
           "held": false,
           "sentence": "",
           "time": 500,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         }
       ],
       "steps": [
@@ -164,7 +182,8 @@
           "sentence": "1400,200",
           "held": false,
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Wait",
@@ -172,7 +191,8 @@
           "held": false,
           "sentence": "",
           "time": 500,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Mouse left click",
@@ -180,7 +200,8 @@
           "sentence": "",
           "held": false,
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Wait",
@@ -188,7 +209,8 @@
           "held": false,
           "sentence": "",
           "time": 500,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Mouse left click",
@@ -196,7 +218,8 @@
           "sentence": "",
           "held": true,
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Wait",
@@ -204,7 +227,8 @@
           "held": false,
           "sentence": "",
           "time": 500,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Mouse move",
@@ -212,7 +236,8 @@
           "sentence": "800,1000",
           "held": false,
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Wait",
@@ -220,7 +245,8 @@
           "held": false,
           "sentence": "",
           "time": 500,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         },
         {
           "name": "Mouse left click",
@@ -228,7 +254,8 @@
           "sentence": "",
           "held": false,
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         }
       ],
       "endSteps": [
@@ -238,7 +265,8 @@
           "held": false,
           "sentence": "",
           "time": 0,
-          "loop": 1
+          "loop": 1,
+          "skip": false
         }
       ]
     }
