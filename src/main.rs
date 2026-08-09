@@ -1896,7 +1896,7 @@ fn run_only_steps(
                     let mut get_current_window_text_for_loop: String =
                         get_current_window_heading_text(&log_file_path);
                     if key.name.eq("Delete") {
-                        let c_string = CString::new(key.sentence.to_owned()).unwrap();
+                        let c_string: CString = CString::new(key.sentence.to_owned()).unwrap();
                         unsafe {
                             _ = windows::Win32::Storage::FileSystem::DeleteFileA(PCSTR(
                                 c_string.as_ptr() as *const u8,
@@ -2369,29 +2369,41 @@ fn check_if_cursor_is_in_loading_state(mut _global_cursor: HCURSOR) -> bool {
         ..Default::default()
     };
     unsafe {
-        // let current_cursor_state: HCURSOR = GetCursor();
-        // println!("CURRENT CURSOR: {:?}", current_cursor_state);
-        // let waiting_cursor: HCURSOR =
-        //     LoadCursorW(None, windows::Win32::UI::WindowsAndMessaging::IDC_WAIT)
-        //         .expect("Error getting WAITING CURSOR");
-        // let loading_cursor: Result<HCURSOR, windows::core::Error> = LoadCursorW(
-        //     None,
-        //     windows::Win32::UI::WindowsAndMessaging::IDC_APPSTARTING,
-        // );
-        // let arrow_cursor: HCURSOR =
-        //     LoadCursorW(None, windows::Win32::UI::WindowsAndMessaging::IDC_ARROW)
-        //         .expect("Error getting WAITING CURSOR");
+        let arrow_cursor: HCURSOR =
+            LoadCursorW(None, windows::Win32::UI::WindowsAndMessaging::IDC_ARROW)
+                .expect("Error getting ARROW CURSOR");
+        /*
+            let waiting_cursor: HCURSOR =
+            LoadCursorW(None, windows::Win32::UI::WindowsAndMessaging::IDC_WAIT)
+                .expect("Error getting WAITING CURSOR");
+            let current_cursor_state: HCURSOR = GetCursor();
+            // println!("CURRENT CURSOR: {:?}", current_cursor_state);
+            let loading_cursor: Result<HCURSOR, windows::core::Error> = LoadCursorW(
+                None,
+                windows::Win32::UI::WindowsAndMessaging::IDC_APPSTARTING,
+            );
+        */
         _ = GetCursorInfo(&mut local_cursor_info);
         // println!(
-        //     "2375: LOCAL CURSOR: {:?}. GLOBAL CURSOR: {:?}",
+        //     "2389: LOCAL CURSOR: {:?}. GLOBAL CURSOR: {:?}",
         //     local_cursor_info.hCursor, _global_cursor
         // );
-        if local_cursor_info.hCursor != _global_cursor {
-            _global_cursor = local_cursor_info.hCursor;
-            return false;
-        } else {
+        // if local_cursor_info.hCursor == waiting_cursor {
+        //     println!("LOADING CURSOR");
+        // }
+
+        if local_cursor_info.hCursor != arrow_cursor {
+            println!("NOT ARROW CURSOR");
             return true;
+        } else {
+            return false;
         }
+        // if local_cursor_info.hCursor != _global_cursor {
+        //     _global_cursor = local_cursor_info.hCursor;
+        //     return false;
+        // } else {
+        //     return true;
+        // }
     }
 }
 fn co_initialize_test() {
