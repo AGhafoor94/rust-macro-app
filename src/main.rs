@@ -2204,9 +2204,9 @@ fn run_only_steps(
                             }
                         }
                     }
-                    match type_of_clipboard {
-                        1 => {}
-                    }
+                    // match type_of_clipboard {
+                    //     1 => {}
+                    // }
                     println!("CLIPBOARD STRING: {:?}", clipboard_string);
                 } else if key.code == 992 {
                     // login exit
