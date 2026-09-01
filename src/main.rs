@@ -1,5 +1,6 @@
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
+use core::slice;
 use serde::{Deserialize, Serialize};
 use std::{
     env::args,
@@ -24,6 +25,7 @@ use windows::Win32::{
     },
     System::{
         DataExchange::{CloseClipboard, GetClipboardData, OpenClipboard, SetClipboardData},
+        Memory::{GlobalLock, GlobalUnlock},
         Shutdown::LockWorkStation,
         SystemInformation::GetLocalTime,
     },
@@ -191,22 +193,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if csv_file_location.to_lowercase().contains("contains")
             || csv_file_location.to_lowercase().contains("equals")
         {
-            // const KEYWORDS_IN_READ_CSV: [&str; 6] =
-            // ["IN", "CONTAINS", "EQUALS", "NEWEST", "OLDEST", "DATE"];
-            /*
-                Split by space
-                get items and keywords
-                if second to last index = Date, filter by date
-                combine 2 items
-            */
-            // let _ = &data.read_csv.split(" ").into_iter().for_each(|f| {
-            //     let find_keyword = KEYWORDS_IN_READ_CSV.iter().find(|&&x| &f == &x);
-
-            //     match find_keyword {
-            //         Some(v) => println!("FIND KEYWORD: {:?}", v),
-            //         _ => println!("ERROR FIND KEYWORD"),
-            //     }
-            // });
             let mut temp_csv_location: String = "%USERPROFILE%\\".to_owned();
             // need to get c drive and username
             let split_string_read_csv: Vec<&str> = data.read_csv.split(" ").collect();
@@ -2108,72 +2094,9 @@ fn run_only_steps(
 
                     if key.name.contains("Log") && get_current_window_text_for_loop.contains("Log")
                     {
+                        control_shift_j_keys(&key, &log_file_path, data, &keys_json);
                         println!("LOG: {}", get_current_window_text_for_loop);
-                        send_input_messages(162, false, true);
-                        send_input_messages(160, false, true);
-                        send_input_messages(74, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(162, true, true);
-                        send_input_messages(160, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        add_sentence(
-                            &key.sentence,
-                            &key.code,
-                            &keys_json,
-                            &log_file_path,
-                            data.word_delay,
-                        );
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(13, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(162, false, true);
-                        send_input_messages(160, false, true);
-                        send_input_messages(74, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(162, true, true);
-                        send_input_messages(160, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000))
-                    }
-                    if key.name.contains("Log") && !get_current_window_text_for_loop.contains("Log")
-                        || !get_current_window_text_for_loop.contains(&key.name)
-                    {
-                        // println!("Not Current Screen")
-                    }
-                    if get_current_window_text_for_loop
-                        .to_lowercase()
-                        .contains(&key.name.to_lowercase())
-                    {
-                        send_input_messages(162, false, true);
-                        send_input_messages(160, false, true);
-                        send_input_messages(74, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(162, true, true);
-                        send_input_messages(160, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        add_sentence(
-                            &key.sentence,
-                            &key.code,
-                            &keys_json,
-                            &log_file_path,
-                            data.word_delay,
-                        );
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(13, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(162, false, true);
-                        send_input_messages(160, false, true);
-                        send_input_messages(74, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000));
-                        send_input_messages(162, true, true);
-                        send_input_messages(160, true, true);
-                        std::thread::sleep(std::time::Duration::from_millis(1000))
-                    }
-                    /*
-                        else {
-                            // println!(
-                            //     "660:- RESULT TITLE: {:?}, sentence {}",
-                            //     result_window_title_main, &key.sentence
-                            // );
+                        /*
                             send_input_messages(162, false, true);
                             send_input_messages(160, false, true);
                             send_input_messages(74, true, true);
@@ -2190,32 +2113,101 @@ fn run_only_steps(
                             );
                             std::thread::sleep(std::time::Duration::from_millis(1000));
                             send_input_messages(13, true, true);
-                            std::thread::sleep(std::time::Duration::from_millis(2000));
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
                             send_input_messages(162, false, true);
                             send_input_messages(160, false, true);
                             send_input_messages(74, true, true);
                             std::thread::sleep(std::time::Duration::from_millis(1000));
                             send_input_messages(162, true, true);
-                            send_input_messages(160, true, true)
-                        }
-                    */
+                            send_input_messages(160, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000))
+                        */
+                    }
+                    if key.name.contains("Log") && !get_current_window_text_for_loop.contains("Log")
+                        || !get_current_window_text_for_loop.contains(&key.name)
+                    {
+                        // println!("Not Current Screen")
+                    }
+                    if get_current_window_text_for_loop
+                        .to_lowercase()
+                        .contains(&key.name.to_lowercase())
+                    {
+                        control_shift_j_keys(&key, &log_file_path, data, &keys_json);
+                        /*
+                            send_input_messages(162, false, true);
+                            send_input_messages(160, false, true);
+                            send_input_messages(74, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            send_input_messages(162, true, true);
+                            send_input_messages(160, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            add_sentence(
+                                &key.sentence,
+                                &key.code,
+                                &keys_json,
+                                &log_file_path,
+                                data.word_delay,
+                            );
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            send_input_messages(13, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            send_input_messages(162, false, true);
+                            send_input_messages(160, false, true);
+                            send_input_messages(74, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000));
+                            send_input_messages(162, true, true);
+                            send_input_messages(160, true, true);
+                            std::thread::sleep(std::time::Duration::from_millis(1000))
+                        */
+                    }
                 } else if key.code == 993 {
                     // Clipboard
+                    let mut clipboard_string: String = String::new();
+                    let mut type_of_clipboard = 0;
+                    if key.name.to_lowercase().contains("find") {
+                        type_of_clipboard = 1;
+                    }
+                    if key.name.to_lowercase().contains("check") {
+                        type_of_clipboard = 2;
+                    }
+
                     unsafe {
                         let clipboard: Result<(), windows::core::Error> = OpenClipboard(None);
                         match clipboard {
-                            Err(e) => update_log_file(
-                                &log_file_path,
-                                format!("Error opening Clipboard: {}", e).as_str(),
-                            ),
+                            Err(e) => {
+                                update_log_file(
+                                    &log_file_path,
+                                    format!("Error opening Clipboard: {}", e).as_str(),
+                                );
+                                let _ = CloseClipboard();
+                            }
                             Ok(_) => {
                                 let _ = SetClipboardData(0x001, None);
-                                let clipboard_data = GetClipboardData(0x001);
-                                // println!("{:?}", clipboard_data);
+                                let clipboard_data: HGLOBAL = HGLOBAL(
+                                    GetClipboardData(13).unwrap().0 as *mut std::ffi::c_void,
+                                );
+                                let global_lock_c_void_pointer: *const u16 =
+                                    GlobalLock(clipboard_data) as *const u16;
+                                let mut length_of_c_void: usize = 0;
+                                while *global_lock_c_void_pointer.add(length_of_c_void) != 0 {
+                                    length_of_c_void += 1;
+                                }
+                                let utf_16_from_c_void: &[u16] = slice::from_raw_parts(
+                                    global_lock_c_void_pointer,
+                                    length_of_c_void,
+                                );
+
+                                clipboard_string = String::from_utf16_lossy(utf_16_from_c_void);
+
+                                let _ = GlobalUnlock(clipboard_data);
                                 let _ = CloseClipboard();
                             }
                         }
                     }
+                    match type_of_clipboard {
+                        1 => {}
+                    }
+                    println!("CLIPBOARD STRING: {:?}", clipboard_string);
                 } else if key.code == 992 {
                     // login exit
                     std::thread::sleep(std::time::Duration::from_millis(2500));
@@ -2231,15 +2223,6 @@ fn run_only_steps(
                         continue;
                     }
                 } else if key.code == 991 {
-                    // unsafe {
-                    //     // let mut ocr_engine = OcrEngine::TryCreateFromUserProfileLanguages();
-                    //     let get_dc: windows::Win32::Graphics::Gdi::HDC =
-                    //         windows::Win32::Graphics::Gdi::GetDC(GetActiveWindow());
-                    //     let pixel: COLORREF =
-                    //         windows::Win32::Graphics::Gdi::GetPixel(get_dc, 500, 500);
-
-                    //     println!("PIXEL COLOUR: {:?}", pixel);
-                    // }
                     unsafe {
                         // let _ = EnumWindows(Some(enum_window), LPARAM(0));
                         // co_initialize_test();
@@ -2363,6 +2346,34 @@ fn run_only_steps(
         _current_system_time = GetLocalTime();
     }
 }
+
+fn control_shift_j_keys(key: &Steps, log_file_path: &str, data: &Macro, keys_json: &Keys) {
+    send_input_messages(162, false, true);
+    send_input_messages(160, false, true);
+    send_input_messages(74, true, true);
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+    send_input_messages(162, true, true);
+    send_input_messages(160, true, true);
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+    add_sentence(
+        &key.sentence,
+        &key.code,
+        &keys_json,
+        &log_file_path,
+        data.word_delay,
+    );
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+    send_input_messages(13, true, true);
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+    send_input_messages(162, false, true);
+    send_input_messages(160, false, true);
+    send_input_messages(74, true, true);
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+    send_input_messages(162, true, true);
+    send_input_messages(160, true, true);
+    std::thread::sleep(std::time::Duration::from_millis(1000))
+}
+
 fn check_if_cursor_is_in_loading_state(mut _global_cursor: HCURSOR) -> bool {
     let mut local_cursor_info: CURSORINFO = CURSORINFO {
         cbSize: core::mem::size_of::<CURSORINFO>() as u32,
@@ -2384,13 +2395,6 @@ fn check_if_cursor_is_in_loading_state(mut _global_cursor: HCURSOR) -> bool {
             );
         */
         _ = GetCursorInfo(&mut local_cursor_info);
-        // println!(
-        //     "2389: LOCAL CURSOR: {:?}. GLOBAL CURSOR: {:?}",
-        //     local_cursor_info.hCursor, _global_cursor
-        // );
-        // if local_cursor_info.hCursor == waiting_cursor {
-        //     println!("LOADING CURSOR");
-        // }
 
         if local_cursor_info.hCursor != arrow_cursor {
             println!("NOT ARROW CURSOR");
@@ -2398,12 +2402,6 @@ fn check_if_cursor_is_in_loading_state(mut _global_cursor: HCURSOR) -> bool {
         } else {
             return false;
         }
-        // if local_cursor_info.hCursor != _global_cursor {
-        //     _global_cursor = local_cursor_info.hCursor;
-        //     return false;
-        // } else {
-        //     return true;
-        // }
     }
 }
 fn co_initialize_test() {
