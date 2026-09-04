@@ -2514,6 +2514,13 @@ fn sentence_if_statement(sentence_branch: &str, find_branch: &str, log_file_path
                                 );
                             }
                         }
+                        999 => {
+                            let time_to_wait: u64 = split_i_by_dash[3]
+                                .trim()
+                                .parse::<u64>()
+                                .expect("Failed to parse int");
+                            std::thread::sleep(std::time::Duration::from_millis(time_to_wait));
+                        }
                         _ => {
                             println!(
                                 "HIT HERE: {:?} - {:?}",
