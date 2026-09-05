@@ -12,7 +12,6 @@
       "loop": 1,
       "websiteOpen": false,
       "runOnce": [],
-      "endSteps": [],
       "steps": [
         {
           "name": "Wait key",
@@ -28,6 +27,17 @@
           "code": 993,
           "held": false,
           "sentence": "true = ( 804 - 1 - false - 300_300, 999 - 1 - false - 2000, 801 - 1 - true, 999 - 1 - false - 2000, 804 - 1 - false - 500_500, 999 - 1 - false - 2000, 801 - 1 - false ) | false = ( 804 - 1 - false - 300_300,804 - 1 - false - 600_600,804 - 1 - false - 750_300,804 - 1 - false - 1300_300 )",
+          "time": 0,
+          "loop": 1,
+          "skip": false
+        }
+      ],
+      "endSteps": [
+        {
+          "name": "cmd",
+          "code": 987,
+          "held": false,
+          "sentence": "cd C:\\Users\\adnan\\Downloads\\Programming Projects\\Rust\\rust-macro-app\\src && cargo run open_two_explorer_windows",
           "time": 0,
           "loop": 1,
           "skip": false
