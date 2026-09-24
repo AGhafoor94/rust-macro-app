@@ -1,0 +1,47 @@
+{
+  "appName": "Move files",
+  "loop": 1,
+  "description": "",
+  "hotkey": "",
+  "readCsv": "",
+  "wordDelay": 5,
+  "delayForEachLoop": 10,
+  "app": [
+    {
+      "appValue": "app",
+      "loop": 1,
+      "websiteOpen": false,
+      "runOnce": [],
+      "endSteps": [],
+      "steps": [
+        {
+          "name": "Wait",
+          "code": 999,
+          "held": false,
+          "sentence": "",
+          "time": 10000,
+          "loop": 1,
+          "skip": false
+        },
+        {
+          "name": "Copy",
+          "code": 993,
+          "held": false,
+          "sentence": "",
+          "time": 0,
+          "loop": 1,
+          "skip": false
+        },
+        {
+          "name": "Loop - today",
+          "code": 993,
+          "held": false,
+          "sentence": "true = ( 9 - 1 - true - true ) | false = ( 40 - 1 - true - true, 162 - 1- false - true, 65 - 1 - true - true, 67 - 1 - true - true, 86 - 1 - true - true, 162 - 1 - true - true )",
+          "time": 0,
+          "loop": 1,
+          "skip": false
+        }
+      ]
+    }
+  ]
+}
