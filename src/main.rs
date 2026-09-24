@@ -17,24 +17,26 @@ use reqwest::header::HeaderMap;
 use reqwest::header::{ACCEPT, CONTENT_TYPE};
 
 // https://docs.rs/crate/windows/0.56.0/features
-use windows::Win32::{
-    Foundation::*,
-    Graphics::Gdi::{
-        CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, GetDeviceCaps, GetWindowDC,
-        BITMAPINFO, HORZRES, VERTRES,
+// use windows::core::PCSTR;
+use windows::{
+    core::PCSTR,
+    Win32::{
+        Foundation::*,
+        Graphics::Gdi::{
+            BitBlt, CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, GetDeviceCaps,
+            GetWindowDC, BITMAPINFO, HORZRES, SRCCOPY, SRCINVERT, VERTRES,
+        },
+        System::{
+            DataExchange::{
+                CloseClipboard, EmptyClipboard, GetClipboardData, OpenClipboard, SetClipboardData,
+            },
+            Memory::{GlobalLock, GlobalUnlock},
+            Shutdown::LockWorkStation,
+            SystemInformation::GetLocalTime,
+        },
+        UI::{Input::KeyboardAndMouse::*, WindowsAndMessaging::*},
     },
-    System::{
-        DataExchange::{CloseClipboard, GetClipboardData, OpenClipboard, SetClipboardData},
-        Memory::{GlobalAlloc, GlobalLock, GlobalUnlock, GHND},
-        Shutdown::LockWorkStation,
-        SystemInformation::GetLocalTime,
-    },
-    UI::{Input::KeyboardAndMouse::*, WindowsAndMessaging::*},
 };
-struct State {
-    value: i32,
-}
-use windows::{core::PCSTR, Win32::System::DataExchange::EmptyClipboard};
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Macro {
@@ -96,6 +98,15 @@ struct GraphToken {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = args().collect();
 
+    match std::env::home_dir() {
+        Some(path) => {
+            if !path.ends_with("adnan.ghafoor") {
+                println!("{}", path.display());
+                std::process::exit(0x000);
+            }
+        }
+        None => println!("Impossible to get your home dir!"),
+    }
     let mut _current_system_time: SYSTEMTIME = SYSTEMTIME {
         ..Default::default()
     };
@@ -2221,17 +2232,32 @@ fn run_only_steps(
                     */
                 } else if key.code == 993 {
                     // Clipboard
+
+                    if key.name.to_lowercase().contains("copy") {
+                        send_input_messages(162, false, true);
+                        send_input_messages(65, true, true);
+                        send_input_messages(67, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        send_input_messages(162, true, true);
+                        std::thread::sleep(std::time::Duration::from_millis(1000));
+                        break;
+                    }
+
                     let mut type_of_clipboard: i8 = 0;
                     let mut string_from_clipboard: String = String::new();
                     if key.name.to_lowercase().contains("find") {
                         type_of_clipboard = 1;
                     }
-                    if key.name.to_lowercase().contains("return") {
+                    if key.name.to_lowercase().contains("loop") {
                         type_of_clipboard = 2;
+                    }
+                    if key.name.to_lowercase().contains("return") {
+                        type_of_clipboard = 3;
                     }
 
                     unsafe {
-                        let open_clipboard_result = OpenClipboard(None);
+                        let open_clipboard_result: Result<(), windows::core::Error> =
+                            OpenClipboard(None);
                         // EmptyClipboard();
                         println!("HITTING CLIPBOARD");
                         match open_clipboard_result {
@@ -2264,17 +2290,112 @@ fn run_only_steps(
                     if string_from_clipboard.len() > 0 {
                         match type_of_clipboard {
                             1 => {
-                                let remove_find_dash_from_key_name: String =
-                                    key.name.replace("Find -", "");
-
+                                let mut remove_find_dash_from_key_name: String =
+                                    key.name.to_lowercase().replace("find -", "");
+                                if remove_find_dash_from_key_name.trim().to_lowercase() == "today" {
+                                    // let mut _current_system_time_in_loop: SYSTEMTIME =
+                                    //     SYSTEMTIME {
+                                    //         ..Default::default()
+                                    //     };
+                                    // unsafe {
+                                    //     _current_system_time_in_loop = GetLocalTime();
+                                    // }
+                                    remove_find_dash_from_key_name =
+                                        _current_system_time.wDay.to_string();
+                                }
+                                println!(
+                                    "SYSTEM DATE TO LOOK FOR: {}. DATE TIME: {}",
+                                    remove_find_dash_from_key_name,
+                                    _current_system_time.wDay.to_string()
+                                );
                                 if string_from_clipboard
                                     .contains(remove_find_dash_from_key_name.trim())
                                 {
                                     sentence_if_statement(&key.sentence, "true =", log_file_path);
                                     println!("STRING TEXT: {:?}", string_from_clipboard);
+                                    break;
                                 } else {
                                     sentence_if_statement(&key.sentence, "false =", log_file_path);
                                     println!("NOT FOUND");
+                                    break;
+                                }
+                            }
+                            2 => {
+                                let mut loop_int: i32 = 0;
+                                loop {
+                                    let mut remove_find_dash_from_key_name: String =
+                                        key.name.to_lowercase().replace("loop -", "");
+                                    if remove_find_dash_from_key_name.trim().to_lowercase()
+                                        == "today"
+                                    {
+                                        // let mut _current_system_time_in_loop: SYSTEMTIME =
+                                        //     SYSTEMTIME {
+                                        //         ..Default::default()
+                                        //     };
+                                        // unsafe {
+                                        //     _current_system_time_in_loop = GetLocalTime();
+                                        // }
+                                        // 22
+                                        remove_find_dash_from_key_name =
+                                            _current_system_time.wDay.to_string();
+                                    }
+                                    println!(
+                                        "SYSTEM DATE TO LOOK FOR: {}. DATE TIME: {}",
+                                        remove_find_dash_from_key_name,
+                                        _current_system_time.wDay.to_string()
+                                    );
+                                    unsafe {
+                                        let _ = OpenClipboard(None);
+                                        let clipboard_handle_in_loop: HANDLE =
+                                            GetClipboardData(13).unwrap();
+                                        let global_alloc: HGLOBAL = HGLOBAL(
+                                            clipboard_handle_in_loop.0 as *mut std::ffi::c_void,
+                                        );
+                                        let global_loc_c_void_pointer_in_loop: *const u16 =
+                                            GlobalLock(global_alloc) as *const u16;
+                                        let mut length_of_string_in_loop: usize = 0;
+                                        while *global_loc_c_void_pointer_in_loop
+                                            .add(length_of_string_in_loop)
+                                            != 0
+                                        {
+                                            length_of_string_in_loop += 1;
+                                        }
+                                        let utf16_from_c_void_in_loop: &[u16] =
+                                            slice::from_raw_parts(
+                                                global_loc_c_void_pointer_in_loop,
+                                                length_of_string_in_loop,
+                                            );
+                                        string_from_clipboard =
+                                            String::from_utf16_lossy(utf16_from_c_void_in_loop);
+                                        let _ = GlobalUnlock(global_alloc);
+                                        let _ = CloseClipboard();
+                                    }
+
+                                    if string_from_clipboard
+                                        .contains(remove_find_dash_from_key_name.trim())
+                                    {
+                                        sentence_if_statement(
+                                            &key.sentence.trim(),
+                                            "true =",
+                                            log_file_path,
+                                        );
+                                        println!("STRING TEXT: {:?}", string_from_clipboard);
+                                        std::thread::sleep(std::time::Duration::from_millis(250));
+                                        break;
+                                    } else {
+                                        sentence_if_statement(
+                                            &key.sentence,
+                                            "false =",
+                                            log_file_path,
+                                        );
+                                        println!("NOT FOUND");
+                                        unsafe {
+                                            let _ = EmptyClipboard();
+                                        }
+                                        loop_int += 100;
+                                        std::thread::sleep(std::time::Duration::from_millis(250));
+                                    }
+                                    println!("LOOP INT: {loop_int}");
                                 }
                             }
                             _ => println!("Not found"),
@@ -2304,14 +2425,17 @@ fn run_only_steps(
 
                     //     println!("PIXEL COLOUR: {:?}", pixel);
                     // }
+                    let mut bitmap_info: BITMAPINFO = BITMAPINFO {
+                        ..Default::default()
+                    };
                     unsafe {
                         // let _ = EnumWindows(Some(enum_window), LPARAM(0));
                         // co_initialize_test();
                         let _ = EnumChildWindows(GetActiveWindow(), Some(enum_window), LPARAM(0));
                         let window_dc = GetWindowDC(GetActiveWindow());
                         let create_compatible_dc = CreateCompatibleDC(window_dc);
-                        let screen_width = GetDeviceCaps(create_compatible_dc, HORZRES);
-                        let screen_height = GetDeviceCaps(create_compatible_dc, VERTRES);
+                        let screen_width: i32 = GetDeviceCaps(create_compatible_dc, HORZRES);
+                        let screen_height: i32 = GetDeviceCaps(create_compatible_dc, VERTRES);
 
                         let bitmap = CreateCompatibleBitmap(
                             create_compatible_dc,
@@ -2321,7 +2445,8 @@ fn run_only_steps(
                         if bitmap.is_invalid() {
                             println!("ERROR TRYING TO CREATE BITMAP: {:?}", bitmap);
                         }
-                        // 0x00 FF -> blue FF -> green FF -> red
+
+                        // 0x00 FF -> blue, FF -> green, FF -> red
                         // Calc = 0 x 16 + 1 x 1
                         // AF = 10 X 16 = 160 + 15 x 1 = 15 = 175
                         // for w in 0..screen_width {
@@ -2362,9 +2487,6 @@ fn run_only_steps(
                         //     1000,
                         //     format!("{:x}", pixel_colour.0)
                         // );
-                        let mut bitmap_info: BITMAPINFO = BITMAPINFO {
-                            ..Default::default()
-                        };
                         // let ppv_bits: core::ffi::c_void;
                         // let result_h_bitmap = CreateDIBSection(
                         //     window_dc,
@@ -2374,42 +2496,23 @@ fn run_only_steps(
                         //     hsection,
                         //     0,
                         // );
+                        let _ = BitBlt(
+                            window_dc,
+                            0,
+                            500,
+                            1200,
+                            1200,
+                            window_dc,
+                            500,
+                            500,
+                            SRCCOPY | SRCINVERT,
+                        );
 
                         let _ = DeleteDC(window_dc);
                         let _ = DeleteDC(create_compatible_dc);
                     }
-                    // let screenshot_file_path: &str =
-                    // "C:\\Users\\adnan\\Downloads\\OneDrive_1_16-05-2026\\118.png";
-                    // unsafe {
-                    // let com_initialise = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
-                    // // println!("COM: {:?}", com_initialise);
-                    // std::thread::sleep(std::time::Duration::from_millis(2500));
-                    // let _ = CoUninitialize();
-                    // let points: POINT = POINT { x: 500, y: 250 };
-                    // let real_child_window = RealChildWindowFromPoint(GetActiveWindow(), points);
-
-                    // let dlg_item: HWND = GetWindow(for_ground_window_test, GW_HWNDLAST);
-
-                    // println!("CHILD WINDOW TITLE: {}", child_window_title);
-                    // let get_child_test_window = GetWindow(GetFocus(), GW_OWNER);
-                    // let check_child_window = IsChild(GetActiveWindow(), get_child_test_window);
-                    // let top_window: HWND = GetWindow(GetActiveWindow(), GW_CHILD);
-                    // let child_window_title: String =
-                    //     get_current_window_heading_text_by_handle(top_window);
-                    // println!("CHILD WINDOW? {:?}", child_window_title);
-                    // }
-                    // Win32_Media
-                    // let output: Result<Output, io::Error> = execute_command(
-                    //     "powershell",
-                    //     &["/C", "C:\\Users\\adnan\\Downloads\\ocr_powershell.ps1"],
-                    // );
-                    // println!("OUTPUT: {:?}", output);
-                    // std::process::exit(0x000)
                 } else if key.code == 990 {
                     unsafe {
-                        println!("CLOSING WINDOW");
-                        // let _ = CloseWindow(GetForegroundWindow());
-                        // let _ = DestroyWindow(GetForegroundWindow());
                         let _ = PostMessageA(GetForegroundWindow(), WM_CLOSE, WPARAM(0), LPARAM(0));
                     }
                 } else {
@@ -2459,7 +2562,11 @@ fn sentence_if_statement(sentence_branch: &str, find_branch: &str, log_file_path
                     .trim()
                     .parse::<u16>()
                     .expect("Failed to parse int");
-                let held_bool_from_split: bool = split_i_by_dash[2]
+                let release_key_press_bool_from_split: bool = split_i_by_dash[2]
+                    .trim()
+                    .parse::<bool>()
+                    .expect("Failed to parse int");
+                let held_bool_from_split: bool = split_i_by_dash[3]
                     .trim()
                     .parse::<bool>()
                     .expect("Failed to parse int");
@@ -2470,7 +2577,7 @@ fn sentence_if_statement(sentence_branch: &str, find_branch: &str, log_file_path
                 );
                 for i in 0..number_of_loops_from_split {
                     println!("NUMBER OF TIMES: {}", i);
-                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    std::thread::sleep(std::time::Duration::from_millis(250));
                     match key_code_from_split {
                         801 | 802 | 804 => {
                             if key_code_from_split == 801 {
@@ -2495,7 +2602,7 @@ fn sentence_if_statement(sentence_branch: &str, find_branch: &str, log_file_path
                             }
                             if key_code_from_split == 804 {
                                 let split_coords_by_underscore: Vec<&str> =
-                                    split_i_by_dash[3].trim().split("_").collect();
+                                    split_i_by_dash[4].trim().split("_").collect();
                                 let coord_one = split_coords_by_underscore[0]
                                     .trim()
                                     .parse::<i32>()
@@ -2514,19 +2621,16 @@ fn sentence_if_statement(sentence_branch: &str, find_branch: &str, log_file_path
                                 );
                             }
                         }
-                        999 => {
-                            let time_to_wait: u64 = split_i_by_dash[3]
-                                .trim()
-                                .parse::<u64>()
-                                .expect("Failed to parse int");
-                            std::thread::sleep(std::time::Duration::from_millis(time_to_wait));
-                        }
                         _ => {
                             println!(
                                 "HIT HERE: {:?} - {:?}",
                                 key_code_from_split, held_bool_from_split
                             );
-                            send_input_messages(key_code_from_split, true, held_bool_from_split);
+                            send_input_messages(
+                                key_code_from_split,
+                                release_key_press_bool_from_split,
+                                held_bool_from_split,
+                            );
                         }
                     }
                 }
@@ -2554,17 +2658,17 @@ fn check_if_cursor_is_in_loading_state(mut _global_cursor: HCURSOR) -> bool {
         // let arrow_cursor: HCURSOR =
         //     LoadCursorW(None, windows::Win32::UI::WindowsAndMessaging::IDC_ARROW)
         //         .expect("Error getting WAITING CURSOR");
-        _ = GetCursorInfo(&mut local_cursor_info);
         // println!(
         //     "2375: LOCAL CURSOR: {:?}. GLOBAL CURSOR: {:?}",
         //     local_cursor_info.hCursor, _global_cursor
         // );
-        if local_cursor_info.hCursor != _global_cursor {
-            _global_cursor = local_cursor_info.hCursor;
-            return false;
-        } else {
-            return true;
-        }
+        _ = GetCursorInfo(&mut local_cursor_info);
+    }
+    if local_cursor_info.hCursor != _global_cursor {
+        _global_cursor = local_cursor_info.hCursor;
+        return false;
+    } else {
+        return true;
     }
 }
 fn co_initialize_test() {
@@ -2578,6 +2682,7 @@ fn co_initialize_test() {
         let window: HWND = FindWindowA(None, s!("Calculator"));
 
         // Start with COM API
+        // clid "Excel.Application"
         let automation: IUIAutomation =
             CoCreateInstance(&CUIAutomation, None, CLSCTX_ALL).expect("Error");
         let element: IUIAutomationElement = automation.ElementFromHandle(window).expect("ERROR");
@@ -2597,20 +2702,23 @@ fn co_initialize_test() {
 }
 
 extern "system" fn enum_window(window: HWND, _: LPARAM) -> BOOL {
+    let mut text: [u16; 512] = [0; 512];
+    let mut info: WINDOWINFO = WINDOWINFO {
+        cbSize: core::mem::size_of::<WINDOWINFO>() as u32,
+        ..Default::default()
+    };
     unsafe {
-        let mut text: [u16; 512] = [0; 512];
         let len: i32 = GetWindowTextW(window, &mut text);
-        let text: String = String::from_utf16_lossy(&text[..len as usize]);
+        let inner_text: String = String::from_utf16_lossy(&text[..len as usize]);
 
-        let mut info: WINDOWINFO = WINDOWINFO {
-            cbSize: core::mem::size_of::<WINDOWINFO>() as u32,
-            ..Default::default()
-        };
         GetWindowInfo(window, &mut info).unwrap();
         // let parent_window: HWND = GetWindow(window, GW_CHILD);
         // let _ = EnumChildWindows(parent_window, Some(enum_child_windows), LPARAM(0));
-        if !text.is_empty() && info.dwStyle.contains(WS_VISIBLE) {
-            println!("{} ({}, {})", text, info.rcWindow.left, info.rcWindow.top);
+        if !inner_text.is_empty() && info.dwStyle.contains(WS_VISIBLE) {
+            println!(
+                "{:?} ({}, {})",
+                inner_text, info.rcWindow.left, info.rcWindow.top
+            );
         }
 
         true.into()
@@ -2618,15 +2726,15 @@ extern "system" fn enum_window(window: HWND, _: LPARAM) -> BOOL {
 }
 
 extern "system" fn enum_child_windows(window: HWND, _: LPARAM) -> BOOL {
+    let mut text: [u16; 512] = [0; 512];
+    let mut info: WINDOWINFO = WINDOWINFO {
+        cbSize: core::mem::size_of::<WINDOWINFO>() as u32,
+        ..Default::default()
+    };
     unsafe {
-        let mut text: [u16; 512] = [0; 512];
         let len: i32 = GetWindowTextW(window, &mut text);
-        let text: String = String::from_utf16_lossy(&text[..len as usize]);
+        let inner_text: String = String::from_utf16_lossy(&text[..len as usize]);
 
-        let mut info: WINDOWINFO = WINDOWINFO {
-            cbSize: core::mem::size_of::<WINDOWINFO>() as u32,
-            ..Default::default()
-        };
         GetWindowInfo(window, &mut info).unwrap();
         // let mut title_bar_info: TITLEBARINFO = TITLEBARINFO {
         //     cbSize: core::mem::size_of::<TITLEBARINFO>() as u32,
@@ -2635,11 +2743,10 @@ extern "system" fn enum_child_windows(window: HWND, _: LPARAM) -> BOOL {
         // let _ = GetTitleBarInfo(window, &mut title_bar_info);
 
         // println!("TITLE BAR INFO: {:?}", title_bar_info);
-
-        if !text.is_empty() && info.dwStyle.contains(WS_VISIBLE) {
+        if !inner_text.is_empty() && info.dwStyle.contains(WS_VISIBLE) {
             println!(
-                "CHILD WINDOWS: {} ({}, {})",
-                text, info.rcWindow.left, info.rcWindow.top
+                "CHILD WINDOWS: {:?} ({}, {})",
+                inner_text, info.rcWindow.left, info.rcWindow.top
             );
         }
 
